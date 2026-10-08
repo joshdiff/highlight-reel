@@ -1,0 +1,9 @@
+{
+  "name": "highlight-reel",
+  "version": "0.2.0",
+  "description": "Soccer highlight reels in DaVinci Resolve, built by Claude: find a player's (or the team's) best moments in raw game footage, direct a 9:16 virtual camera, grade, title and export. One command end to end, or each stage on its own.",
+  "author": { "name": "Josh Diffenderfer", "url": "https://github.com/joshdiff" },
+  "repository": "https://github.com/joshdiff/highlight-reel",
+  "license": "MIT",
+  "keywords": ["soccer", "highlights", "davinci-resolve", "video", "sports"]
+}

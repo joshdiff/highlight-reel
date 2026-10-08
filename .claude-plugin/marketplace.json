@@ -1,0 +1,15 @@
+{
+  "name": "joshdiff",
+  "description": "Claude Code plugins by joshdiff \u2014 sports video tooling.",
+  "owner": {
+    "name": "Josh Diffenderfer",
+    "url": "https://github.com/joshdiff"
+  },
+  "plugins": [
+    {
+      "name": "highlight-reel",
+      "source": "./",
+      "description": "Soccer highlight reels in DaVinci Resolve \u2014 end to end or stage by stage."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.DS_Store
+# per-game workspaces and machine config live outside the repo (~/.hr_work, <output>/_hr) — never commit footage or reel.json
+_hr/
+*.mov
+*.mp4
+*.drx

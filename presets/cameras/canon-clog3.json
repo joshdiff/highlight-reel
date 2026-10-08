@@ -1,0 +1,12 @@
+{
+  "name": "Canon (R5/R6/R7/C70) in C-Log3",
+  "type": "mirrorless",
+  "encoding": "canon_clog3",
+  "match": {
+    "brand": "CAEP"
+  },
+  "notes": [
+    "brand CAEP = Canon; full-range HEVC; confirm Log vs standard"
+  ],
+  "id": "canon-clog3"
+}

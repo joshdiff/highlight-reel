@@ -1,0 +1,16 @@
+{
+  "name": "Panasonic (GH5/GH6/S5) in V-Log",
+  "type": "mirrorless",
+  "encoding": "panasonic_vlog",
+  "match": {
+    "prefix": [
+      "P10",
+      "P11",
+      "P12"
+    ]
+  },
+  "notes": [
+    "confirm V-Log vs standard"
+  ],
+  "id": "panasonic-vlog"
+}

@@ -1,27 +1,48 @@
 ---
 name: hr-export
-description: Highlight reel stage 10 — render the delivery timeline to MP4 at the deliverable's spec, verify the file (ffprobe + frames per clip), write the final report, and update the player/team/camera profiles with what this game taught.
+description: Highlight reel deliverable stage — deliver the finished files (render from Resolve, or take the ffmpeg-finished files), name and place them by the client's template, verify each file, report, and write what this deliverable taught back into the player/team/camera profiles.
 ---
 
-# hr-export — render, verify, report
+# hr-export — deliver, verify, learn
 
 $ARGUMENTS
 
-`S=$(dirname "$(find -L ~/.claude/skills ~/.claude/plugins -name hrstate.py -path '*highlight-reel/scripts/*' 2>/dev/null | head -1)")` (the scripts folder, wherever the skill is installed). Shared rules: `$S/../reference/quality-bar.md`. Uses the davinci-resolve MCP.
+`S=$(dirname "$(find -L ~/.claude/skills ~/.claude/plugins -name hrstate.py -path '*highlight-reel/scripts/*' 2>/dev/null | head -1)")`. Shared rules: `$S/../reference/quality-bar.md`.
 
-**Workspace:** if `$ARGUMENTS` names a game, `hrstate.py use "<game>"`; then `hrstate.py status`. Requires `grade` and `title` done (if run standalone without them, say so and ask whether to export anyway).
+**Scope: deliverable.** Requires `finish` done (ffmpeg path) or `grade` + `title` done (Resolve path). Final paths: `python3 $S/naming.py` prints one path per aspect, from the client's template (never overwrites; adds _v2, _v3).
 
-## Steps
-1. `render`: `set_format_and_codec` mp4/H264 → `set_mode` 1 → `set_settings` one at a time: TargetDir (`settings.output_folder`), CustomName (`settings.output_name` without .mp4), ExportVideo, ExportAudio, FormatWidth, FormatHeight, FrameRate, VideoQuality (kb/s) → `add_job` → `start` → wait for the file to stop growing → `get_job_status` Complete → `verify_output` with expected_frames.
-   - social_reel 1080×1920, 14000 kb/s, 29.97 · recruiting_tape 1920×1080, 25000, 29.97 · goals_reel 1920×1080, 20000, 29.97
-   - Never overwrite — if the file exists add `_v2`, `_v3`.
-2. Verify the FILE: ffprobe resolution / fps / bitrate / duration; extract one frame per clip (mid-item, from `resolve.items` record frames) into `checks/export_NN.jpg` and look at them — right clip order, grade looks natural, lower third on the teaser.
-3. `hrstate.py set export '{"file": "...", "width": .., "height": .., "fps": .., "kbps": .., "duration": ..}'`; `hrstate.py done export`.
-4. **Final report:** the file and its stats; each clip with its beat (e.g. "take-on past #4, 7s") and what the camera did; anything uncertain (from stage notes — e.g. a CANDIDATE you couldn't confirm).
-5. **Update the profiles** (this is how the next reel gets better — never write these details into the repo):
-   - player: fill empty `appearance` fields with identifiers you actually relied on; add new `decoys`; `hrprofile.py note player <id> "<lesson>"` for anything that changed how you worked (a missed clip and why, a camera angle that hid the number); append to `games` {date, event, team_id, deliverable, output file, best_clips {clip: beat}}; add the season to the team membership if missing.
-   - team: `kits.<kit>.hsv.<encoding>` already saved by hr-survey; add teammates you identified to `roster`; opponent colours under `opponents`.
-   - camera: a note if a camera needed special handling (wrong picture profile, VFR, a CDL that worked).
+## 1. Produce the files
+- **ffmpeg path:** `hr-finish` already wrote `deliv.finish.files {aspect: path}`. Move or copy each to its naming.py path.
+- **Resolve path**, per aspect timeline:
+  1. `render`: `set_format_and_codec` mp4/H264 → `set_mode` 1;
+  2. `set_settings` one at a time: TargetDir and CustomName (from the naming.py path), ExportVideo, ExportAudio, FormatWidth, FormatHeight, FrameRate 29.97, VideoQuality;
+  3. `add_job` → `start` → wait for the file to stop growing → `get_job_status` Complete → `verify_output` with expected_frames.
+
+  Bitrates: 9:16 / 1:1 / 4:5 at 14000 kb/s; 16:9 at 20000 (recruiting: 25000).
+
+## 2. Verify every file
+- ffprobe: resolution, fps, bitrate, duration ≈ the timeline.
+- `python3 $S/gradecheck.py --video <file> --n 8`
+- Extract one frame per play into `<deliverable>/checks/export_NN.jpg` and look at them: right order, natural grade, lower third on the teaser, watermark/bumpers present if branded.
+
+Write `hrstate.py deliv set export '{"files": {"9:16": "..."}, "verified": true, "stats": {...}}'` and `hrstate.py deliv done export`.
+
+## 3. Report
+Give:
+- each file and its stats;
+- each play with its beat (e.g. "take-on past #4, 7s") and what the camera did;
+- anything uncertain: CANDIDATE clips not confirmed, flags, encoding mismatches, 24 fps judder.
+
+Also add the report's flags to `deliv.flags` so `hrstate.py status` shows them.
+
+## 4. Learn (this is how the next reel gets better)
+- **player targets:**
+  - `python3 $S/hrprofile.py learn <player_id> --game "<game id>" --target <target>` (idempotent; catches any find edits);
+  - then record the outputs: `python3 $S/hrprofile.py output <player_id> "<game id>" <file>…`.
+- **client feedback** later ("drop the defensive clip", "more assists"): `hrprofile.py feedback <player_id> keep|drop "<text>" --deliv <id> [--clip C]`. hr-select applies it from then on.
+- **team:** add teammates you identified to `roster` and opponent colours under `opponents` (`hrprofile.py set team …`).
+- **camera:** a note if a camera needed special handling (wrong picture profile, VFR, a CDL that worked).
+- Never write any of this into the repo or the skill files.
 
 ## Done when
-ffprobe matches the spec, the duration matches the delivery timeline, and the extracted frames look right.
+Every aspect's file is at its naming.py path, verified, and passes gradecheck. The report has been given, and learn has run.

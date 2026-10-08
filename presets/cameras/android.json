@@ -1,0 +1,15 @@
+{
+  "name": "Android phone",
+  "type": "phone",
+  "encoding": "rec709",
+  "match": {
+    "prefix": [
+      "VID_",
+      "PXL_"
+    ]
+  },
+  "notes": [
+    "VFR common; HDR10+ on some models (then rec2100_pq)"
+  ],
+  "id": "android"
+}

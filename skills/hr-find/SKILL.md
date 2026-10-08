@@ -1,45 +1,69 @@
 ---
 name: hr-find
-description: Highlight reel stage 3 — identify the featured player (number + identifiers, reject decoys) or the team's moments, then score each clip's action from a 5 fps grid. Writes find.clips to reel.json. No Resolve needed.
+description: Highlight reel target stage — find a player (number + learned look, rejecting decoys) or a team's moments in a surveyed game, score every play by the sport pack, and record sightings so the player profile learns. Writes the target's find.json.
 ---
 
 # hr-find — who, where, and how good
 
 $ARGUMENTS
 
-`S=$(dirname "$(find -L ~/.claude/skills ~/.claude/plugins -name hrstate.py -path '*highlight-reel/scripts/*' 2>/dev/null | head -1)")` (the scripts folder, wherever the skill is installed). Shared rules: `$S/../reference/quality-bar.md`. Start from the profiles: `python3 $S/hrprofile.py brief <settings.player_id> <settings.team_id>` (number on THIS team, kit, look, decoys, recent lessons) and `hrprofile.py show team <team_id>` (roster, opponent colours). A player with an empty look is normal: identify by number alone, and note what you see for hr-export to save.
+`S=$(dirname "$(find -L ~/.claude/skills ~/.claude/plugins -name hrstate.py -path '*highlight-reel/scripts/*' 2>/dev/null | head -1)")`. Shared rules: `$S/../reference/quality-bar.md`.
 
-**Workspace:** if `$ARGUMENTS` names a game, `hrstate.py use "<game>"`; then `hrstate.py status`. Requires `survey` done.
+**Scope: target.** `python3 $S/hrstate.py status`. If `$ARGUMENTS` names a game/target: `hrstate.py use game "<game>"` then `use target <id>`. Requires game stage `survey` done. `hrstate.py target get` shows the target (kind, player_id, team side).
 
-"She" below = the featured player (player mode) or the team_jersey_color player on the ball (team mode).
+**Sport rules:** read `$S/../../../sports/<sport>/pack.md` (`hrstate.py get sport`). Its events, scoring and identification sections override anything generic here.
 
-## A. (player) Identify the player — torso crops, then confirm densely
-1. Read every `sheets/crops_NN.jpg`.
-2. Mark each clip: **CONFIRMED** (number legible on a team_jersey_color shirt), **CANDIDATE** (her `appearance` identifiers from the profile — hair, boots, sleeves, accessories — but number not seen), or **NO**.
-3. **Decoys:** everything in the profile's `decoys`, plus always: the same number on the opponent's shirt, teen numbers (#17 for #7). Reject them. Record any NEW decoy you meet in the clip notes so hr-export can add it to the profile.
-4. The 5-sample pass MISSES clips (on the first real run: a goal and two long dribbles). For every CANDIDATE and every clip whose overview frames show a team_jersey_color player close to camera with the ball, run `python3 $S/vgrid.py <clip> 0 <duration> <clip>_2fps.jpg 2` and look for the number. Promote to CONFIRMED only when the number is seen in some frame of the same continuous action.
+"They" below = the featured player (player target) or the target team's player on the ball (team target).
 
-## A-team. (team) Find the moments instead of a player
-Skip number ID. From the overview sheets and `src2fps/` thumbnails flag: goals (ball in net, several team_jersey_color players converging/hugging, a centre-circle restart in the next clip), shots and keeper saves, take-ons, multi-pass moves into the box, big tackles/blocks. Confirm it's OUR team's moment by shirt colour — never include goals conceded (an opponent's shot appears only if our keeper's save is the highlight).
+## 0. Load what we already know
+- `python3 $S/hrprofile.py brief <player_id> <team_id>`: number on THIS team, kits, look, **best cues ranked by past reliability**, what misled us before, decoys, client feedback, flags.
+- `python3 $S/hrprofile.py refsheet <player_id> --kit <kit>`: Read the image. These are confirmed past sightings; compare every candidate against them.
+- A player with no refs and an empty look is normal for a first game: identify by number alone, and record what you see.
+- If the brief has a flag (e.g. a possible haircut), treat that cue as unreliable until confirmed.
 
-## B. Score from the 5 fps grid (not from samples)
-For each CONFIRMED clip (team: each flagged clip): `python3 $S/vgrid.py <clip> <a> <b> <clip>.jpg` over the action and classify:
-- **3** = GOAL, SHOT, or TAKE-ON (beats a defender with the ball), she is the ball carrier
-- **2** = clear on-ball run / receive-and-dribble / tackle won and carried
-- **1** = off-ball, scramble she isn't driving, or too far to read → drop
+## 1. (player) Identify — crop sheets, then confirm densely
+1. `python3 $S/crops.py --team <side>` → `sheets/<side>/crops_NN.jpg` + `crops_meta.json`. Read every sheet next to the refsheet.
+2. Check cues in the order the brief ranks them (e.g. "hair 90%, number 40%" means look at hair first). Mark each clip:
+   - **CONFIRMED:** the number legible on the right shirt, OR two independent strong cues that match the refs.
+   - **CANDIDATE:** one cue matches.
+   - **NO.**
+3. **Decoys:** everything in the profile's decoys, plus always the same number on the other team and similar numbers (#17/#7, #3/#23/#33). Reject them, and record any NEW decoy in the target's `decoys_met`.
+4. The 5-sample pass misses clips. For every CANDIDATE, and every clip where a target-team player is close to camera with the ball, run `python3 $S/vgrid.py <clip> <in> <out> <clip>_2fps.jpg 2` over the segment and look for the number. Promote to CONFIRMED only when it's seen in the same continuous action.
 
-## C. Write results
-One entry per clip examined (including NO/1, so a re-run doesn't redo them), via a JSON file + `hrstate.py merge find.clips file.json`:
+## 1-team. (team) Find the moments instead of a player
+Skip number ID. From the overview sheets (`python3 $S/sheets.py`) and the `src2fps/` thumbnails, flag the pack's events using its "signals" list. Confirm it's the TARGET team's moment by shirt colour. Never include points or goals conceded, unless the target's save/block/dig is the highlight.
+
+## 2. Score from the 5 fps grid (not from samples)
+For each CONFIRMED clip (team: each flagged clip): `python3 $S/vgrid.py <clip> <a> <b> <clip>.jpg` over the action. Classify with the pack's `events` (each carries its score: 3 = highlight, 2 = solid, 1 = drop). Record the whole move: action_start → action_end, first touch → outcome.
+
+## 3. Write results — every examined clip, so learning is complete
+Write a JSON file and run `hrstate.py target merge clips file.json`:
 ```json
-{"R7__1630": {"status": "CONFIRMED", "score": 3, "event": "goal", "goal": true,
-              "action_start": 2.6, "action_end": 10.8, "kick_t": 4.2, "scorer": "#7",
-              "beat": "dribble past #4, left-foot finish far post", "notes": "number seen 3.0–3.6s"}}
+{"R7__1630": {"status": "CONFIRMED", "score": 3, "event": "goal", "scoring": true,
+              "action_start": 2.6, "action_end": 10.8, "key_t": 4.2,
+              "beat": "dribble past #4, left-foot finish far post",
+              "cues": ["number", "hair"],
+              "ref": {"t": 1.625, "box": [1482, 792, 1620, 1023]},
+              "observed": {"footwear": "white boots"},
+              "foot": "left", "area": "left half-space"},
+ "R7__1549": {"status": "NO", "misled_by": ["#17 teammate"]}}
 ```
-Times are source seconds. `action_start`/`action_end` = whole move, first touch → outcome. Then `hrstate.py done find "<N confirmed, M candidates, K goals>"`.
+Field notes:
+- `key_t` is the decisive contact: kick, shot release, attack contact.
+- `cues` lists ONLY the cues that actually confirmed this sighting. `misled_by` is set when a clip looked like them but wasn't.
+- `ref` is one clear sighting per confirmed clip: the `t` and `box_src` of their tile in `crops_meta.json` (key `"<clip>:<n>"`), or a box you measured on a 4K frame. Choose views that show the cues well.
+- `observed` holds look details worth remembering (fields like hair, footwear, accessories). Use `foot`/`hand`, `position` and `area` when visible.
+
+Then `hrstate.py target set decoys_met '[…]'` if any, then:
+```
+python3 $S/hrprofile.py learn <player_id> --game "<game id>" --target <target id>
+python3 $S/hrstate.py target done find "<N confirmed, M candidates, K scoring plays>"
+```
+`learn` saves the references, updates cue reliability, the dated look, play style and game history. It's safe to re-run.
 
 ## Done when
-Every clip has a status; every kept clip (score ≥2) has action_start/end, event, beat; every goal has kick_t.
+Every clip has a status. Every kept clip (score ≥2) has action_start/end, event, beat and key_t. Every CONFIRMED clip has cues, and most have a ref. `learn` ran for player targets.
 
 ## Known gaps (next optimizations)
-- Number reading is visual-only from sheets; no OCR or re-ID tracking across frames.
-- The dense check depends on judgement of "close to camera with the ball" — should be driven by a ranked list from hr-survey.
+- No automatic re-ID yet. Planned: `reid.py` ranks crop tiles by similarity to the reference gallery, so the dense check starts with the likeliest clips.
+- Sponsor boards and banners in a shirt-like colour get detected as players. Needs a shape/texture filter in detect.py.

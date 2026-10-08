@@ -1,15 +1,47 @@
 {
-  "id": "riverside-fc",
+  "id": "riverside-u14g",
   "name": "Riverside FC",
   "media_folder": "Riverside FC",
   "club": "Riverside Soccer Club",
   "age_group": "U14 Girls",
   "kits": {
-    "home": { "shirt": "red", "shorts": "black", "socks": "red",
-              "hsv": { "sony_slog3": { "lo": [0, 60, 60], "hi": [8, 200, 200] } } },
-    "away": { "shirt": "white", "shorts": "white", "socks": "white", "hsv": {} }
+    "home": {
+      "shirt": "red",
+      "shorts": "black",
+      "socks": "red",
+      "hsv": {
+        "sony_slog3": {
+          "lo": [
+            0,
+            60,
+            60
+          ],
+          "hi": [
+            8,
+            200,
+            200
+          ]
+        }
+      }
+    },
+    "away": {
+      "shirt": "white",
+      "shorts": "white",
+      "socks": "white",
+      "hsv": {}
+    }
   },
-  "roster": { "10": "Alex (featured)", "19": "teammate — looks like Alex" },
-  "opponents": { "Lakeside": { "shirt": "navy", "notes": "keeper in green" } },
-  "notes": []
+  "roster": {
+    "10": "Alex (featured)",
+    "19": "teammate \u2014 looks like Alex"
+  },
+  "opponents": {
+    "Lakeside": {
+      "shirt": "navy",
+      "notes": "keeper in green"
+    }
+  },
+  "notes": [],
+  "sport": "soccer",
+  "client_id": "riverside-fc"
 }

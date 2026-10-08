@@ -1,0 +1,186 @@
+{
+  "id": "basketball",
+  "name": "Basketball",
+  "surface": {
+    "type": "hardwood",
+    "top_ignore": 0.08,
+    "ground_hue": [
+      5,
+      25
+    ],
+    "ball": {
+      "min_area": 10,
+      "max_area": 400,
+      "max_sat": 255,
+      "note": "orange \u2014 similar hue to hardwood; use the rim region and motion instead of colour"
+    }
+  },
+  "segmentation": {
+    "max_clip_s": 150,
+    "pre_roll_s": 8,
+    "post_roll_s": 4,
+    "merge_gap_s": 3,
+    "typical_play_s": [
+      5,
+      24
+    ],
+    "dead_ball_cues": [
+      "free-throw setup",
+      "timeout huddle",
+      "inbound setup",
+      "substitution at the scorer's table"
+    ],
+    "candidates_per_min": 2.5
+  },
+  "events": {
+    "made_three": {
+      "score": 3,
+      "scoring": true,
+      "label": "Made 3-pointer"
+    },
+    "and_one": {
+      "score": 3,
+      "scoring": true,
+      "label": "Made basket through contact (foul called)"
+    },
+    "dunk": {
+      "score": 3,
+      "scoring": true,
+      "label": "Dunk"
+    },
+    "transition_score": {
+      "score": 3,
+      "scoring": true,
+      "label": "Fast-break layup/dunk"
+    },
+    "block": {
+      "score": 3,
+      "label": "Blocked shot"
+    },
+    "steal_score": {
+      "score": 3,
+      "scoring": true,
+      "label": "Steal that leads to a score"
+    },
+    "handle_score": {
+      "score": 3,
+      "scoring": true,
+      "label": "Crossover / move that beats a defender then scores"
+    },
+    "assist": {
+      "score": 3,
+      "label": "Pass that leads directly to a score (no-look, skip, lob)"
+    },
+    "made_two": {
+      "score": 2,
+      "scoring": true,
+      "label": "Made 2 (jumper, layup, post move)"
+    },
+    "putback": {
+      "score": 2,
+      "scoring": true,
+      "label": "Offensive rebound + putback"
+    },
+    "steal": {
+      "score": 2,
+      "label": "Steal / deflection"
+    },
+    "charge": {
+      "score": 2,
+      "label": "Takes a charge"
+    },
+    "rebound": {
+      "score": 1,
+      "label": "Defensive rebound in traffic"
+    },
+    "free_throw": {
+      "score": 1,
+      "scoring": true,
+      "label": "Free throw (only for clutch moments)"
+    },
+    "off_ball": {
+      "score": 1,
+      "label": "Off the ball or not readable"
+    }
+  },
+  "signals": [
+    "ball through the hoop / net snapping (rim region)",
+    "bench players standing up / crowd peak",
+    "scoreboard change",
+    "all ten players reversing direction (change of possession after a make)",
+    "whistle with arms signalling and-one"
+  ],
+  "identification": {
+    "number_locations": [
+      "front (large)",
+      "back (large)",
+      "shorts (sometimes)"
+    ],
+    "headgear": false,
+    "kit_exceptions": [],
+    "notes": [
+      "numbers are readable from both sides \u2014 best ID of the three sports",
+      "shoes, arm sleeves, headbands and hair are strong secondary cues",
+      "home white jerseys clip under gym lights: calibrate on a frame with correct exposure"
+    ]
+  },
+  "deliverables": {
+    "social_reel": {
+      "aspect": "9:16",
+      "target_s": [
+        30,
+        45
+      ],
+      "seq_s": [
+        2,
+        7
+      ],
+      "n_seq": [
+        6,
+        10
+      ],
+      "teaser": "best dunk / three / and-one frozen at the top of the shot",
+      "finale": "best scoring play in full with the reaction"
+    },
+    "recruiting_tape": {
+      "aspect": "16:9",
+      "target_s": [
+        180,
+        300
+      ],
+      "order": [
+        "scoring variety (threes, drives, finishes)",
+        "playmaking",
+        "defense (blocks, steals, charges)"
+      ]
+    },
+    "scoring_reel": {
+      "aspect": "16:9",
+      "target_s": null,
+      "events": [
+        "made_three",
+        "and_one",
+        "dunk",
+        "transition_score",
+        "made_two",
+        "putback",
+        "steal_score",
+        "handle_score"
+      ],
+      "order": "chronological",
+      "each": "touch \u2192 shot \u2192 make \u2192 reaction"
+    },
+    "season_reel": {
+      "aspect": "9:16",
+      "target_s": [
+        60,
+        90
+      ],
+      "seq_s": [
+        2,
+        6
+      ],
+      "source": "best clips from the player's games this season"
+    }
+  }
+}

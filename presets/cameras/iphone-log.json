@@ -1,0 +1,13 @@
+{
+  "name": "iPhone 15 Pro+ (Apple Log)",
+  "type": "phone",
+  "encoding": "apple_log",
+  "match": {
+    "make": "Apple",
+    "codec": "prores"
+  },
+  "notes": [
+    "Apple Log is usually ProRes; confirm with the user"
+  ],
+  "id": "iphone-log"
+}

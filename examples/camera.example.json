@@ -2,7 +2,15 @@
   "id": "fx30",
   "name": "Sony FX30",
   "type": "cinema",
-  "match": { "prefix": ["C0"], "codec": "h264" },
+  "match": {
+    "prefix": [
+      "C0"
+    ],
+    "codec": "h264"
+  },
   "encoding": "sony_slog3",
-  "notes": ["SPARE CDL slope 0.95 / sat 2.0 worked at Lakeside"]
+  "notes": [
+    "SPARE CDL slope 0.95 / sat 2.0 worked at Lakeside"
+  ],
+  "lut": null
 }

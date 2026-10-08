@@ -1,0 +1,14 @@
+{
+  "name": "Sony (FX3/FX30/FX6/A7S/A7 IV) in S-Log3",
+  "type": "cinema",
+  "encoding": "sony_slog3",
+  "match": {
+    "prefix": [
+      "C0"
+    ]
+  },
+  "notes": [
+    "C0001.MP4 naming; confirm the picture profile (S-Cinetone is rec709)"
+  ],
+  "id": "sony-slog3"
+}

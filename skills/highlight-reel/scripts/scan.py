@@ -1,6 +1,9 @@
-"""Team-colour blobs on every survey frame → sheets/blobs.json, using each clip's own jersey range
-(per encoding). Also merges into media.clips: frame info and `looks` (flat|contrasty) — a Log clip
-that looks contrasty (or Rec.709 that looks flat) is flagged: the camera was probably set differently."""
+"""Team-colour blobs on every survey frame, for each team in the game → sheets/blobs_<side>.json,
+using each clip's own shirt range (per team, per encoding). Also merges `looks` (flat|contrasty) into
+media.clips — a Log clip that looks contrasty (or Rec.709 that looks flat) is flagged: the camera was
+probably set to a different picture profile.
+
+Usage: python3 scan.py [--team home|away|TEAM_ID ...]   (default: every team calibrated for all encodings)"""
 import os, sys, json
 from concurrent.futures import ProcessPoolExecutor
 import cv2
@@ -20,37 +23,39 @@ def looks(imgs):
 
 
 def job(a):
-    c, rng = a
+    c, rngs = a
     imgs = [cv2.imread(f'{FR}/{c}/frame_{k}.jpg') for k in range(5)]
-    return c, [team_blobs(i, rng) for i in imgs], looks(imgs)
-
-
-def info(c):
-    p = open(f'{FR}/{c}/info.txt').read().strip().split(',', 6)  # path (last) may contain commas
-    n, d = p[3].split('/')
-    return dict(path=p[-1], width=int(p[1]), height=int(p[2]), fps=round(float(n) / float(d), 3),
-                frames=int(p[4]) if p[4].isdigit() else None, duration=float(p[5]))
+    return c, {side: [team_blobs(i, r) for i in imgs] for side, r in rngs.items()}, looks(imgs)
 
 
 if __name__ == '__main__':
+    a = sys.argv[1:]
+    sides = [hrstate.team_key(t)[0] for t in a[a.index('--team') + 1:]] if '--team' in a else list(hrstate.get('teams'))
+    encs = list(hrstate.get('media.encodings') or {})
+    skipped = [s for s in sides if not all(hrstate.calibrated(s, e) for e in encs)]
+    sides = [s for s in sides if s not in skipped]
+    for s in skipped:
+        print(f"skip {s} ({hrstate.get(f'teams.{s}.name')}): shirt not calibrated for "
+              f"{[e for e in encs if not hrstate.calibrated(s, e)]} — calibrate (hr-survey), then scan.py --team {s}")
     clips = sorted(d for d in os.listdir(FR) if not d.startswith('.') and os.path.exists(f'{FR}/{d}/frame_4.jpg'))
+    work = [(c, {s: hrstate.team_hsv(c, s) for s in sides}) for c in clips]
     with ProcessPoolExecutor(10) as ex:
-        out = list(ex.map(job, [(c, hrstate.team_hsv(c)) for c in clips]))
-    res = {c: b for c, b, _ in out}
-    json.dump(res, open(os.path.join(hrstate.sub('sheets'), 'blobs.json'), 'w'))
+        out = list(ex.map(job, work))
+    SH = hrstate.sub('sheets')
+    for s in sides:
+        json.dump({c: b[s] for c, b, _ in out}, open(os.path.join(SH, f'blobs_{s}.json'), 'w'))
+        n = sum(1 for _, b, _ in out for fr in b[s] for x in fr if x['area'] >= 250)
+        print(f"{s} ({hrstate.get(f'teams.{s}.name')}): {n} player-size blobs")
+    import cameras
     mc = hrstate.get('media.clips', {}) or {}
     flagged = []
     for c, _, (lk, sat, spread) in out:
         e = mc.setdefault(c, {})
-        for k, v in info(c).items():
-            e.setdefault(k, v)
         e.update(looks=lk, look_sat=sat, look_spread=spread)
-        kind = __import__('cameras').ENCODINGS.get(e.get('encoding') or '', {}).get('kind')
+        kind = cameras.ENCODINGS.get(e.get('encoding') or '', {}).get('kind')
         if (kind == 'log' and lk == 'contrasty') or (kind == 'sdr' and lk == 'flat'):
             flagged.append(f"{c} ({e.get('encoding')} but looks {lk}: sat {sat}, spread {spread})")
     hrstate.set_('media.clips', mc)
-    for th in (100, 150, 250, 400):
-        print(f'blobs >= {th}px:', sum(1 for c in res for fr in res[c] for b in fr if b['area'] >= th))
     print(len(clips), 'clips scanned')
     if flagged:
         print('ENCODING MISMATCH — check these clips:\n  ' + '\n  '.join(flagged))

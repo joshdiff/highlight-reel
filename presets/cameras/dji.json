@@ -1,0 +1,14 @@
+{
+  "name": "DJI (Osmo/Pocket/Action/drone)",
+  "type": "action",
+  "encoding": "rec709",
+  "match": {
+    "prefix": [
+      "DJI_"
+    ]
+  },
+  "notes": [
+    "D-Log M exists \u2014 ask"
+  ],
+  "id": "dji"
+}

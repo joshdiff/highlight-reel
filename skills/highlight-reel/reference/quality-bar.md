@@ -1,26 +1,40 @@
-# What "great" looks like — the bar every stage serves
+# What "great" looks like — rules for every sport
 
-Learned by comparing an automated reel with a hand-cut one. The skill must reach this bar on its own — it never takes the user's own cut as an input.
+Learned by comparing an automated reel with a hand-cut one. The skill must reach this bar on its own; it never takes the user's own cut as an input. Sport-specific rules (events, scoring, director table, reel timings) live in the sport pack: `sports/<sport>/pack.md` + `pack.json` (`python3 $S/sports.py show <sport>`).
 
-- ~40–50s, 1080×1920 @ 29.97, ~14 Mbps, natural grade (no clipped sky, true jersey colour, rich grass).
-- **Structure:** cold-open TEASER of the best goal/shot (shot → ball in flight → FREEZE before the outcome, name lower third on screen, whip-blur out) → 5–8 on-ball sequences of VARIED length (3–9s) → FULL goal at the end: build-up → shot → ball in net → pan back to the scorer → celebration.
-- **(player) Every clip shows the featured player on the ball** (receive → dribble → take-on → shot/pass). No scrambles they aren't driving, no distant wide shots where they're tiny.
-- **(team) Every clip is a team moment worth watching:** goals (all of them), shots on target, keeper saves, take-ons, combination play (2–3 passes ending in a chance), big defensive stops. Spread screen time across players; goals and their build-up come first.
-- **The frame is directed:** follows the featured player (team: the ball carrier) while they have the ball, switches to the BALL the instant they shoot or pass, holds on the outcome, PANS BACK to the scorer on a goal and stays through the celebration, widening as teammates arrive. Punches in on 1v1 take-ons.
+## Craft rules (all sports)
+- **On the ball, making something happen.** Player reels show the featured player driving the play. Team reels show the team's best moments with screen time spread across players. No scrambles the player isn't driving, and no distant shots where they're tiny.
+- **Structure:**
+  1. Cold-open teaser: the best scoring play, frozen before the outcome, with the name lower third, whip out.
+  2. Varied-length sequences, strongest first.
+  3. The teaser play in full at the end, through the reaction/celebration.
+- **The frame is directed.** It follows the player while they have the ball, switches to the ball the instant they shoot/pass/attack, holds on the outcome, then pans back to the scorer and stays through the celebration. It punches in on 1v1 moments.
+- **Natural grade:** no clipped sky or gym lights, true shirt colour, a rich playing surface. Measured: mean luma 0.36–0.45, mean saturation ≥0.35, clipped <1%.
+- **Every claim is verified on rendered frames,** not on settings read back.
 
-## Modes
-PLAYER mode features one player ("the featured player" / "she" in these docs). TEAM mode features the team: "the featured player" in every rule becomes *whichever team_jersey_color player has the ball or makes the play*, and the scorer is whoever scored. Rules marked (player) or (team) apply to one mode only.
+## Modes and deliverables
+- PLAYER targets feature one player ("the player" / "they" in the docs).
+- TEAM targets feature a team: "the player" becomes whichever player of that team has the ball or makes the play, and the scorer is whoever scored.
 
-## Deliverables
-| deliverable_type | aspect | length | structure | render |
-|---|---|---|---|---|
-| social_reel | 1080×1920 | 40–50s (50–60s with several goals, team) | teaser → 5–8 sequences → full goal | 14000 kb/s, 29.97 |
-| recruiting_tape | 1920×1080 | 2–3 min | goals (build-up + finish) → take-ons/skills → passing/defending | 25000 kb/s, 29.97 |
-| goals_reel | 1920×1080 | as needed | every goal, chronological, build-up → finish → celebration | 20000 kb/s, 29.97 |
+Deliverable types (timings per sport in `pack.json → deliverables`):
+
+| type | default aspect | what |
+|---|---|---|
+| social_reel | 9:16 | teaser → sequences → full best play |
+| recruiting_tape | 16:9 | grouped by skill for coaches |
+| scoring_reel (`goals_reel` alias) | 16:9 | every scoring play, chronological |
+| season_reel | 9:16 | best clips across a player's games (from their profile) |
+
+A deliverable can request several aspects (9:16, 1:1, 4:5, 16:9); each gets its own render.
+
+## Data layers (all local; nothing personal goes in the repo)
+- **Machine:** `hrstate.py config` (output folder, media root, default grade, ffmpeg).
+- **Library:** `hrprofile.py` (players, teams), `cameras.py` (cameras). Players learn after every game; see `/hr-library`.
+- **Work:** `<output>/_hr/` holding sessions, games (shared survey), targets (find per player/team) and deliverables (select → export). `python3 $S/hrstate.py status` shows the board.
 
 ## Environment facts
-- Scripts: the highlight-reel skill's `scripts/` folder (`$S`, located by the `find` one-liner at the top of each stage). Run python WITHOUT `-I` (cv2/scipy live in user site-packages). ffmpeg/ffprobe at `/opt/homebrew/bin/`.
+- Scripts: the highlight-reel skill's `scripts/` folder (`$S`, located by the `find` one-liner at the top of each stage). Run python WITHOUT `-I` (cv2/scipy live in user site-packages). ffmpeg/ffprobe via `hrstate.tool()`.
 - Use python, never `bc`, for timestamp maths (bc drops the leading zero and ffmpeg rejects ".29").
-- Machine settings (`hrstate.py config`), player/team profiles (`hrprofile.py`) and camera profiles (`cameras.py`) live in `~/.hr_work/` — never in the skill files. Media is expected as `<media_root>/<season>/<team media_folder>/<game>/`.
-- Footage can mix cameras and encodings in one game (Log mirrorless + phone HDR + previously exported reels). Camera, encoding, orientation, fps and VFR are per clip in `media.clips`; never assume one camera per game.
-- Resolve 21.1 via the davinci-resolve MCP: Pan keyframes unavailable (`add_keyframe` → "'NoneType' object is not callable") — that's why reframing is done by `vcam.py`, not Resolve. Titles need the nested-timeline route (hr-title).
+- A game can mix cameras and footage types. Camera, encoding, orientation, fps and VFR are per clip in `media.clips`; never assume one camera per game.
+- Times in find/select/shot lists are SOURCE-FILE seconds (absolute in the file), even for segments of long files.
+- Resolve 21.1 via the davinci-resolve MCP: Pan keyframes are unavailable (`add_keyframe` → "'NoneType' object is not callable"), which is why reframing is done by `vcam.py`. Titles need the nested-timeline route (hr-title).

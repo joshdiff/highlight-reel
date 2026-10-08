@@ -1,0 +1,17 @@
+{
+  "name": "GoPro",
+  "type": "action",
+  "encoding": "rec709",
+  "match": {
+    "prefix": [
+      "GX",
+      "GH",
+      "GOPR",
+      "GP"
+    ]
+  },
+  "notes": [
+    "wide/fisheye lens; GP-Log exists on HERO11+ \u2014 ask"
+  ],
+  "id": "gopro"
+}

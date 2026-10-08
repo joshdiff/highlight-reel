@@ -1,0 +1,168 @@
+{
+  "id": "volleyball",
+  "name": "Volleyball",
+  "surface": {
+    "type": "sport_court",
+    "top_ignore": 0.05,
+    "ground_hue": null,
+    "ball": {
+      "min_area": 10,
+      "max_area": 400,
+      "max_sat": 160,
+      "note": "multi-colour ball, often high in the frame; the net is a fixed landmark"
+    }
+  },
+  "segmentation": {
+    "max_clip_s": 120,
+    "pre_roll_s": 3,
+    "post_roll_s": 4,
+    "merge_gap_s": 2,
+    "typical_play_s": [
+      4,
+      20
+    ],
+    "dead_ball_cues": [
+      "serve setup (15\u201325s between rallies)",
+      "timeout huddle",
+      "substitution / libero swap"
+    ],
+    "candidates_per_min": 2.0
+  },
+  "events": {
+    "kill": {
+      "score": 3,
+      "scoring": true,
+      "label": "Attack that wins the point"
+    },
+    "ace": {
+      "score": 3,
+      "scoring": true,
+      "label": "Serve that wins the point outright"
+    },
+    "stuff_block": {
+      "score": 3,
+      "scoring": true,
+      "label": "Block that wins the point"
+    },
+    "rally_won": {
+      "score": 3,
+      "scoring": true,
+      "label": "Long rally (6+ contacts per side) won by our team"
+    },
+    "dig_to_kill": {
+      "score": 3,
+      "label": "Dig that leads to a kill"
+    },
+    "set_to_kill": {
+      "score": 3,
+      "label": "Set that leads to a kill (setter reels)"
+    },
+    "back_row_attack": {
+      "score": 3,
+      "scoring": true,
+      "label": "Back-row attack kill"
+    },
+    "tip_roll": {
+      "score": 2,
+      "scoring": true,
+      "label": "Tip / roll shot that scores"
+    },
+    "dig": {
+      "score": 2,
+      "label": "Hard-driven ball dug up"
+    },
+    "block_touch": {
+      "score": 2,
+      "label": "Block touch that slows the attack"
+    },
+    "serve_receive": {
+      "score": 1,
+      "label": "Perfect pass on serve receive (recruiting tape only)"
+    },
+    "off_ball": {
+      "score": 1,
+      "label": "Not involved / not readable"
+    }
+  },
+  "signals": [
+    "ball hitting the floor (rally ends)",
+    "all six same-shirt players converging in a huddle (point won)",
+    "whistle and a referee pointing",
+    "scoreboard change",
+    "players walking back to serve positions (dead time begins)"
+  ],
+  "identification": {
+    "number_locations": [
+      "front",
+      "back",
+      "shorts (sometimes)"
+    ],
+    "headgear": false,
+    "kit_exceptions": [
+      "the LIBERO wears a different colour from teammates \u2014 calibrate it as a separate kit if the player is a libero"
+    ],
+    "notes": [
+      "hair is usually tied back, so ponytail/braid colour and length still help",
+      "knee pads, shoes and arm sleeves are secondary cues",
+      "players rotate: position on court changes every point"
+    ]
+  },
+  "deliverables": {
+    "social_reel": {
+      "aspect": "9:16",
+      "target_s": [
+        30,
+        45
+      ],
+      "seq_s": [
+        3,
+        8
+      ],
+      "n_seq": [
+        5,
+        9
+      ],
+      "teaser": "best kill frozen at the hand-ball contact",
+      "finale": "the same rally in full with the celebration"
+    },
+    "recruiting_tape": {
+      "aspect": "16:9",
+      "target_s": [
+        180,
+        300
+      ],
+      "order": [
+        "primary skill for the position (attacking / setting / passing-defense)",
+        "serving",
+        "blocking",
+        "full rallies"
+      ]
+    },
+    "scoring_reel": {
+      "aspect": "16:9",
+      "target_s": null,
+      "events": [
+        "kill",
+        "ace",
+        "stuff_block",
+        "back_row_attack",
+        "tip_roll",
+        "rally_won"
+      ],
+      "order": "chronological",
+      "each": "serve/pass \u2192 set \u2192 attack \u2192 floor \u2192 celebration"
+    },
+    "season_reel": {
+      "aspect": "9:16",
+      "target_s": [
+        60,
+        90
+      ],
+      "seq_s": [
+        3,
+        7
+      ],
+      "source": "best clips from the player's games this season"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "iPhone (HDR off)",
+  "type": "phone",
+  "encoding": "rec709",
+  "match": {
+    "make": "Apple",
+    "transfer": "bt709"
+  },
+  "notes": [
+    "often VFR"
+  ],
+  "id": "iphone-sdr"
+}

@@ -1,10 +1,11 @@
 """Cameras & footage types — a game can mix several (a cinema/mirrorless body in Log, a phone in HDR,
 an action cam, an AI sports camera), so camera is decided PER CLIP.
 
-Camera profiles: $HR_HOME/cameras/<id>.json (local, never in the repo; see examples/camera.example.json)
+Camera profiles: $HR_HOME/library/cameras/<id>.json (local, never in the repo; see examples/camera.example.json)
   {"name": "Canon EOS R7", "type": "mirrorless",           # mirrorless|cinema|phone|action|ai_panoramic|export|other
                                                              # export = already-edited renders: skipped by the survey
    "match": {"prefix": ["R7_"], "brand": "CAEP", "codec": "hevc"},   # every given field must match
+                                                             # (also: make, model, transfer, min_aspect)
    "encoding": "canon_clog3",                                # key of ENCODINGS below
    "notes": ["full-range HEVC 4:2:2 10-bit"]}
 
@@ -14,10 +15,12 @@ its non-Log profile.
 
 CLI (python3 cameras.py ...):
   probe DIR|FILE...     ffprobe every clip, match to profiles, group unknown signatures (fast; no frames)
-  assign [DIR]          probe the workspace source folder and write media.clips.<clip>.camera/encoding/...
-                        and media.cameras {camera_id: count}
+  assign [DIR...]       probe the current game's sources → media.files (per file), media.clips (one per
+                        short file), media.cameras / encodings / long_files
   list                  camera profiles
-  new ID --name N --type T --encoding E [--prefix P] [--brand B] [--codec C] [--model M]
+  new ID [--from-preset P] --name N --type T --encoding E [--prefix P] [--brand B] [--codec C]
+         [--make M] [--model M] [--transfer T] [--lut FILE.cube]   (lut: official Log→Rec.709 LUT for /hr-finish)
+  presets               camera presets shipped in the repo (suggested for unknown cameras by probe)
   encodings             known encodings and their Resolve input colour space
 """
 import json, os, re, subprocess, sys
@@ -44,7 +47,7 @@ VIDEO_EXT = ('.mp4', '.mov', '.mxf', '.m4v')
 
 
 def _dir():
-    d = os.path.join(hrstate.HOME, 'cameras'); os.makedirs(d, exist_ok=True); return d
+    d = os.path.join(hrstate.LIB, 'cameras'); os.makedirs(d, exist_ok=True); return d
 
 
 def profiles():
@@ -91,20 +94,40 @@ def guess_encoding(sig):
     return {'arib-std-b67': 'rec2100_hlg', 'smpte2084': 'rec2100_pq'}.get(sig['transfer'])
 
 
+def _matches(sig, m):
+    if not m:
+        return False
+    if m.get('prefix') and not any(sig['name'].startswith(x) for x in m['prefix']):
+        return False
+    if m.get('brand') and m['brand'] not in sig['brand']:
+        return False
+    for k in ('codec', 'make', 'model', 'transfer'):
+        if m.get(k) and m[k].lower() not in (sig.get(k) or '').lower():
+            return False
+    if m.get('min_aspect') and (sig['width'] or 0) / max(1, sig['height'] or 1) < m['min_aspect']:
+        return False
+    return True
+
+
 def match(sig, profs=None):
     for cid, p in (profs if profs is not None else profiles()).items():
-        m = p.get('match', {})
-        ok = True
-        if m.get('prefix') and not any(sig['name'].startswith(x) for x in m['prefix']):
-            ok = False
-        if m.get('brand') and m['brand'] not in sig['brand']:
-            ok = False
-        for k in ('codec', 'make', 'model'):
-            if m.get(k) and m[k].lower() not in (sig[k] or '').lower():
-                ok = False
-        if ok and m:
+        if _matches(sig, p.get('match', {})):
             return cid
     return None
+
+
+PRESETS_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'presets', 'cameras'))
+
+
+def presets():
+    if not os.path.isdir(PRESETS_DIR):
+        return {}
+    return {f[:-5]: json.load(open(os.path.join(PRESETS_DIR, f))) for f in sorted(os.listdir(PRESETS_DIR)) if f.endswith('.json')}
+
+
+def suggest(sig):
+    """Preset ids whose match rules fit this signature (suggestions only — confirm the picture profile)."""
+    return [pid for pid, p in presets().items() if _matches(sig, p.get('match', {}))]
 
 
 def files_in(paths):
@@ -137,37 +160,67 @@ def summary(sigs):
         if not s['camera']:
             key = (s['prefix'], s['make'] or '-', s['model'] or '-', s['codec'], f"{s['width']}x{s['height']}",
                    s['fps'], 'VFR' if s['vfr'] else 'CFR', s['transfer'] or '-')
-            unknown[key].append(s['name'])
+            unknown[key].append(s)
     profs = profiles()
     lines = []
     for cid, n in known.most_common():
         p = profs[cid]
         lines.append(f"  {cid:14s} {n:4d} clips  {p['name']} [{p.get('type')}] encoding={p['encoding']}")
-    for k, names in unknown.items():
-        lines.append(f"  UNKNOWN       {len(names):4d} clips  prefix={k[0]!r} make={k[1]} model={k[2]} {k[3]} {k[4]} "
-                     f"{k[5]}fps {k[6]} transfer={k[7]}  e.g. {names[0]}")
+    for k, group in unknown.items():
+        sug = suggest(group[0])
+        lines.append(f"  UNKNOWN       {len(group):4d} clips  prefix={k[0]!r} make={k[1]} model={k[2]} {k[3]} {k[4]} "
+                     f"{k[5]}fps {k[6]} transfer={k[7]}  e.g. {group[0]['name']}"
+                     + (f"\n                 suggested presets: {', '.join(sug)}" if sug else ''))
     fps = Counter(s['fps'] for s in sigs); res = Counter(s['height'] for s in sigs)
     lines.append(f"  frame rates: {dict(fps)}   heights: {dict(res)}   VFR clips: {sum(s['vfr'] for s in sigs)}")
     return '\n'.join(lines), bool(unknown)
 
 
-def assign(folder=None):
-    folder = folder or hrstate.get('settings.source_folder')
-    sigs = probe([folder])
-    clips = hrstate.get('media.clips', {}) or {}
-    for s in sigs:
-        c = clips.setdefault(s['name'], {})
-        c.update({k: s[k] for k in ('path', 'camera', 'encoding', 'width', 'height', 'fps', 'vfr', 'range', 'duration')})
+LONG_DEFAULT_S = 180   # files longer than this are "long" (continuous recording) unless the sport pack says otherwise
+
+
+def assign(folders=None, long_s=None):
+    """Probe every source of the current game. media.files[<file id>] holds each file's signature;
+    short files also become one clip each (media.clips[<id>] = whole file, in 0 → out duration);
+    long files are flagged for segment.py, which adds their clips. Ids stay unique across cards
+    (a second R7__0001 from another folder becomes <folder>-R7__0001)."""
+    folders = folders or hrstate.get('sources') or []
+    if long_s is None:
+        try:
+            import sports
+            long_s = sports.load(hrstate.get('sport')).get('segmentation', {}).get('max_clip_s', LONG_DEFAULT_S)
+        except Exception:
+            long_s = LONG_DEFAULT_S
+    sigs = probe(folders)
+    media = hrstate.get('media') or {}
+    files, clips = media.get('files', {}), media.get('clips', {})
+    by_path = {f['path']: fid for fid, f in files.items()}
     profs = profiles()
-    for s in sigs:
-        c = clips[s['name']]
-        c['camera_type'] = profs[s['camera']].get('type') if s['camera'] else None
-        c['orientation'] = 'portrait' if (s['height'] or 0) > (s['width'] or 0) else 'landscape'
-        c['use'] = c['camera_type'] != 'export'
-    hrstate.set_('media.clips', clips)
-    hrstate.set_('media.cameras', dict(Counter(s['camera'] or 'unknown' for s in sigs)))
-    hrstate.set_('media.encodings', dict(Counter(s['encoding'] or 'unknown' for s in sigs
-                                                  if clips[s['name']]['use'])))
+    for sg in sigs:
+        fid = by_path.get(sg['path'])
+        if not fid:
+            fid = sg['name']
+            if fid in files and files[fid]['path'] != sg['path']:
+                fid = f"{hrstate.slug(os.path.basename(os.path.dirname(sg['path'])))}-{sg['name']}"
+        sg['id'] = fid
+        f = files.setdefault(fid, {})
+        f.update({k: sg[k] for k in ('path', 'camera', 'encoding', 'width', 'height', 'fps', 'vfr', 'range', 'duration')})
+        f['camera_type'] = profs[sg['camera']].get('type') if sg['camera'] else None
+        f['orientation'] = 'portrait' if (sg['height'] or 0) > (sg['width'] or 0) else 'landscape'
+        f['use'] = f['camera_type'] != 'export'
+        f['long'] = (sg['duration'] or 0) > long_s
+        if not f['long']:
+            c = clips.setdefault(fid, {})
+            c.update({k: f[k] for k in f if k != 'long'}, file=fid, **{'in': 0.0, 'out': round(sg['duration'], 3)})
+        else:   # long-file clips come from segment.py; refresh their file properties
+            for c in clips.values():
+                if c.get('file') == fid:
+                    c.update({k: f[k] for k in ('path', 'camera', 'encoding', 'camera_type', 'orientation', 'use')})
+    media.update(files=files, clips=clips,
+                 cameras=dict(Counter(f.get('camera') or 'unknown' for f in files.values())),
+                 encodings=dict(Counter(f.get('encoding') or 'unknown' for f in files.values() if f['use'])),
+                 long_files=[fid for fid, f in files.items() if f['long'] and f['use']])
+    hrstate.set_('media', media)
     return sigs
 
 
@@ -180,7 +233,10 @@ def main(a):
         if unk:
             print('→ create a profile for each UNKNOWN group (cameras.py new …) — ask the user which camera and colour profile it is.')
     elif cmd == 'assign':
-        sigs = assign(a[1] if len(a) > 1 else None); text, unk = summary(sigs); print(text)
+        sigs = assign(a[1:] or None); text, unk = summary(sigs); print(text)
+        lf = hrstate.get('media.long_files') or []
+        if lf:
+            print(f'  long files (need segment.py): {len(lf)}')
         if unk:
             sys.exit('unknown cameras present — add profiles, then re-run assign')
     elif cmd == 'list':
@@ -188,16 +244,24 @@ def main(a):
             print(f"  {cid:14s} {p['name']:24s} [{p.get('type')}] {p['encoding']:12s} match={p.get('match')}")
     elif cmd == 'new':
         cid = a[1]; o = dict(zip(a[2::2], a[3::2]))
-        if o['--encoding'] not in ENCODINGS:
+        base = presets().get(o.get('--from-preset'), {}) if o.get('--from-preset') else {}
+        if o.get('--from-preset') and not base:
+            sys.exit(f"no preset {o['--from-preset']!r}; see `cameras.py presets`")
+        enc = o.get('--encoding', base.get('encoding'))
+        if enc not in ENCODINGS:
             sys.exit(f"unknown encoding; one of {list(ENCODINGS)}")
-        m = {k: o[f'--{k}'] for k in ('brand', 'codec', 'make', 'model') if o.get(f'--{k}')}
+        m = dict(base.get('match', {}))
+        m.update({k: o[f'--{k}'] for k in ('brand', 'codec', 'make', 'model', 'transfer') if o.get(f'--{k}')})
         if o.get('--prefix'):
             m['prefix'] = o['--prefix'].split(',')
         if not m:
-            sys.exit('give at least one match field (--prefix/--brand/--codec/--make/--model)')
-        p = {'id': cid, 'name': o['--name'], 'type': o.get('--type', 'other'), 'match': m,
-             'encoding': o['--encoding'], 'notes': []}
+            sys.exit('give at least one match field (--prefix/--brand/--codec/--make/--model/--transfer)')
+        p = {'id': cid, 'name': o.get('--name', base.get('name', cid)), 'type': o.get('--type', base.get('type', 'other')),
+             'match': m, 'encoding': enc, 'lut': o.get('--lut'), 'notes': list(base.get('notes', []))}
         hrstate._write(os.path.join(_dir(), f'{cid}.json'), p); print(os.path.join(_dir(), f'{cid}.json'))
+    elif cmd == 'presets':
+        for pid, p in presets().items():
+            print(f"  {pid:16s} {p['name']:44s} [{p['type']}] {p['encoding']:12s} match={p['match']}")
     elif cmd == 'encodings':
         for k, v in ENCODINGS.items():
             print(f"  {k:15s} {v['kind']:4s} → {v['resolve']}" + ('  (verify name on read-back)' if v.get('verify') else ''))

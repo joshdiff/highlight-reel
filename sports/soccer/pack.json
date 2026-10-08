@@ -1,0 +1,162 @@
+{
+  "id": "soccer",
+  "name": "Soccer",
+  "surface": {
+    "type": "grass_or_turf",
+    "top_ignore": 0.15,
+    "ground_hue": [
+      30,
+      90
+    ],
+    "ball": {
+      "min_area": 6,
+      "max_area": 220,
+      "max_sat": 90,
+      "note": "small, white/light, ringed by green"
+    }
+  },
+  "segmentation": {
+    "max_clip_s": 180,
+    "pre_roll_s": 8,
+    "post_roll_s": 6,
+    "merge_gap_s": 4,
+    "typical_play_s": [
+      4,
+      25
+    ],
+    "dead_ball_cues": [
+      "ball out of play",
+      "throw-in setup",
+      "goal kick",
+      "substitution",
+      "injury stoppage"
+    ],
+    "candidates_per_min": 1.2
+  },
+  "events": {
+    "goal": {
+      "score": 3,
+      "scoring": true,
+      "label": "Goal (ball crosses the line)"
+    },
+    "assist": {
+      "score": 3,
+      "label": "Final pass that leads directly to a goal"
+    },
+    "shot_on_target": {
+      "score": 3,
+      "label": "Shot the keeper must save, or off the post/bar"
+    },
+    "take_on": {
+      "score": 3,
+      "label": "Beats a defender 1v1 with the ball"
+    },
+    "save": {
+      "score": 3,
+      "label": "Keeper save (for a keeper or team reel)"
+    },
+    "shot": {
+      "score": 2,
+      "label": "Shot off target from a real chance"
+    },
+    "key_pass": {
+      "score": 2,
+      "label": "Through ball / switch / cross that creates a chance"
+    },
+    "dribble": {
+      "score": 2,
+      "label": "Clear on-ball run / receive-and-carry"
+    },
+    "tackle_won": {
+      "score": 2,
+      "label": "Wins the ball and keeps it"
+    },
+    "block": {
+      "score": 2,
+      "label": "Blocks a shot or cross"
+    },
+    "header": {
+      "score": 2,
+      "label": "Headed clearance/flick/finish"
+    },
+    "off_ball": {
+      "score": 1,
+      "label": "Off the ball, scramble not driven by the player, or too far to read"
+    }
+  },
+  "signals": [
+    "several same-shirt players converging/hugging (goal celebration)",
+    "ball in the net / net bulging",
+    "restart from the centre circle in the next clip (after a goal)",
+    "crowd or bench noise peak",
+    "keeper diving / ball going behind for a corner after a save"
+  ],
+  "identification": {
+    "number_locations": [
+      "back",
+      "front (small, often unreadable)",
+      "shorts (sometimes)"
+    ],
+    "headgear": false,
+    "kit_exceptions": [
+      "goalkeepers wear a different colour from outfield players"
+    ],
+    "notes": [
+      "numbers are large on the back only; front-facing shots rely on hair, sleeves, boots, build"
+    ]
+  },
+  "deliverables": {
+    "social_reel": {
+      "aspect": "9:16",
+      "target_s": [
+        40,
+        50
+      ],
+      "seq_s": [
+        3,
+        9
+      ],
+      "n_seq": [
+        5,
+        8
+      ],
+      "teaser": "best goal (else best shot) frozen with the ball in flight",
+      "finale": "the same goal in full with celebration"
+    },
+    "recruiting_tape": {
+      "aspect": "16:9",
+      "target_s": [
+        120,
+        180
+      ],
+      "order": [
+        "goals with build-up",
+        "take-ons / skills",
+        "passing",
+        "defending"
+      ]
+    },
+    "scoring_reel": {
+      "aspect": "16:9",
+      "target_s": null,
+      "events": [
+        "goal",
+        "assist"
+      ],
+      "order": "chronological",
+      "each": "build-up \u2192 finish \u2192 celebration"
+    },
+    "season_reel": {
+      "aspect": "9:16",
+      "target_s": [
+        60,
+        90
+      ],
+      "seq_s": [
+        3,
+        8
+      ],
+      "source": "best clips from the player's games this season"
+    }
+  }
+}

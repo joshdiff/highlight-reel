@@ -1,0 +1,15 @@
+{
+  "id": "riverside-fc",
+  "name": "Riverside Soccer Club",
+  "contact": "media@riverside.example",
+  "brand_id": "riverside",
+  "teams": ["riverside-u14g", "riverside-u16g"],
+  "players": ["alex"],
+  "output_root": "~/Deliveries/Riverside",
+  "output_template": "{season}/{team}/{date} vs {opponent}/{who}_{type}_{aspect}.mp4",
+  "default_orders": [
+    { "target": "team",   "type": "scoring_reel", "aspects": ["16:9"], "finish": "ffmpeg" },
+    { "target": "player", "type": "social_reel",  "aspects": ["9:16", "4:5"], "finish": "ffmpeg" }
+  ],
+  "notes": ["Club posts reels on Mondays — prioritise Saturday games"]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Veo / Trace / Pixellot \u2014 follow-cam export",
+  "type": "ai_follow",
+  "encoding": "rec709",
+  "match": {},
+  "notes": [
+    "full-match 16:9 already following the ball; long file \u2192 segment.py, or event tags"
+  ],
+  "id": "veo-follow"
+}

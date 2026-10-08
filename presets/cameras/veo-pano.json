@@ -1,0 +1,12 @@
+{
+  "name": "Veo \u2014 panoramic recording",
+  "type": "ai_panoramic",
+  "encoding": "rec709",
+  "match": {
+    "min_aspect": 2.5
+  },
+  "notes": [
+    "very wide; subjects small \u2014 high base zoom; use event tags (segment.py --tags)"
+  ],
+  "id": "veo-pano"
+}

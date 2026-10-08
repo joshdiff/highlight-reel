@@ -1,0 +1,13 @@
+{
+  "name": "iPhone (HDR video, default)",
+  "type": "phone",
+  "encoding": "rec2100_hlg",
+  "match": {
+    "make": "Apple",
+    "transfer": "arib-std-b67"
+  },
+  "notes": [
+    "often VFR; portrait when held upright; Dolby Vision HLG"
+  ],
+  "id": "iphone-hdr"
+}

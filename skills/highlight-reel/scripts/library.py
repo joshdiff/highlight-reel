@@ -28,7 +28,7 @@ BRAND_DEFAULT = {
     'watermark': None, 'intro': None, 'outro': None,
     'music': {'folder': None, 'volume_db': -16, 'duck': True, 'license_note': None},
     'loudness': {'social': -14, 'landscape': -16},
-    'grade': {'cdl': {'slope': 1.0, 'offset': 0.0, 'power': 1.02, 'sat': 1.3}, 'creative_lut': None},
+    'grade': {'cdl': {'slope': 1.0, 'offset': 0.0, 'power': 1.02, 'sat': 1.1}, 'creative_lut': None},
 }
 
 

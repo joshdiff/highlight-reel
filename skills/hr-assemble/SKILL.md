@@ -12,10 +12,10 @@ $ARGUMENTS
 **Scope: deliverable.** Requires `project` done; open the project in `hrstate.py get resolve.project`.
 
 ## How append works
-`media_pool` → `append_to_timeline` needs, per clip: `clip_id`, `start_frame`, `end_frame` (source frames), `record_frame` (relative) and `track_index`.
+`media_pool` → `append_to_timeline` needs, per clip: `clip_id`, `start_frame`, `end_frame` (source frames, **end-exclusive** — an inclusive end leaves a 1-frame gap at every cut), `record_frame` (relative) and `track_index`.
 - Source frame = round(source_seconds × source_fps), with fps from `media.clips`.
 - record_frame accumulates in timeline frames = round(source_frames / source_fps × 29.97).
-- Reframes are already trimmed: use 0 → (frame count − 1).
+- Reframes carry handles (vcam prints `handle_in_s`/`handle_out_s`, usually 0.2s = 12 frames at 59.94): use handle_in frames → frame count − handle_out frames. The teaser has none: 0 → frame count.
 
 Mixed sources: 59.94/29.97 conform cleanly; 24/25 fps clips judder on 29.97, so prefer another angle or accept it and note it in `flags`. VFR phone clips used directly (16:9 from 16:9) should first be transcoded to constant-rate ProRes in `<deliverable>/reframed/` and imported instead of the original.
 
@@ -25,13 +25,14 @@ Mixed sources: 59.94/29.97 conform cleanly; 24/25 fps clips judder on 29.97, so 
    - reframed aspects: the teaser reframe → each sequence's reframe (finale last);
    - 16:9 from 16:9 footage: the originals trimmed to the `select` windows.
 
-   Cuts only; the teaser carries its own whip-out.
+   The teaser carries its own whip-out into the first play (a hard cut there).
+   **Blend the other cuts:** `timeline_item` → `add_transition` on each play except the last, `options` {"type": "Cross Dissolve", "category": "simple", "position": "end", "alignment": "center", "duration": 6} (0.2s, uses 3 frames of handle each side; Resolve 21.1+). Transitions become items in the track and **count in `item_index`**, so add them from the last cut backwards. Viewers called straight cuts between plays "choppy". Read back with `timeline` → `get_items` (kind "transition", centred on each cut).
 3. **Brand bumpers** (if the deliverable has a brand with intro/outro clips): import them into `BRAND` and place them first/last.
 4. `timeline` → `source_range_report`: no gaps, ranges as planned, length = `select.total_s` (+ bumpers) ± 0.5s.
 5. **Write results:** `hrstate.py deliv merge resolve file.json` with `{"timelines": {"9:16": "..."}, "items": {"9:16": [{"item_id": "...", "clip": "...", "record_frame": 0, "frames": 75}]}}`. Then `hrstate.py deliv done assemble "<aspects, total s>"`.
 
 ## Done when
-For every aspect: no gaps, order teaser → middle → finale, length within the target, resolution and fps read back correctly.
+For every aspect: no gaps, order teaser → middle → finale, a dissolve on every play-to-play cut, length within the target, resolution and fps read back correctly.
 
 ## Known gaps
 - No music track yet. Clip audio is kept as-is (no levels/ducking); the ffmpeg path (`/hr-finish`) does music + loudness.

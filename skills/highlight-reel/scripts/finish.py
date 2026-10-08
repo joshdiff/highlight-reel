@@ -272,7 +272,7 @@ def main(a):
         stats[asp] = st; bad = [k for k, v in st.items() if not v['ok']]
         print(f"{asp}: {out}  {inf['duration']}s  music={'yes' if inf['music'] else 'no'}  "
               f"grade {len(st) - len(bad)}/{len(st)} frames in range"
-              + ('; out: ' + ', '.join(f"{k} luma {st[k]['luma']} sat {st[k]['sat']} clip {st[k]['clip_pct']}%" for k in bad[:3]) if bad else ''))
+              + ('; out: ' + ', '.join(f"{k} luma {st[k]['luma']} vivid {st[k]['vivid_pct']}% clip {st[k]['clip_pct']}%" for k in bad[:3]) if bad else ''))
     hrstate.set_('finish', {'files': files, 'info': info, 'stats': stats}, scope='deliv')
 
 

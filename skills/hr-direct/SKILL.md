@@ -26,12 +26,14 @@ Then **track the on-ball phase densely:** `python3 $S/track.py <shotlist>` follo
 **Constraints (all sports):**
 - The subject stays inside the middle 60% of the window, except during a ≤0.25s whip (`"move":"fast"`).
 - Never chase a subject the camera operator didn't keep in the source frame; hold the last good x.
-- Zoom ≥1.0. vcam caps zoom by source resolution vs output: about 1.5 for 4K→9:16, 1.15 for HD, up to 2.0 for 4K→16:9. Prefer the 4K angle when the same moment exists twice.
+- Zoom 1.0 by default; 1.1 at most for a player who is tiny in a wide shot. No punch-ins: viewers judged 1.1–1.35 "too zoomed in" — 9:16 already crops to a third of the width. Prefer the 4K angle when the same moment exists twice.
+- **Motion:** vcam moves the window like a camera operator (`FOLLOW` in vcam.py): still while the subject stays inside a centre dead zone, a critically damped ease when it must follow, speed and acceleration limits, stiffening near the edge so the subject never leaves. Keys say where the subject is; they no longer drive the window directly, so dense or jittery keys don't make jittery video. Only `"move":"fast"` whips bypass it. Viewers judged the raw key-following "jumpy/choppy" (the window slid a median 12–50% of the source width per second on top of the operator's own pans; with the follow model it is ~2%).
+- **Handles:** set `"handles": 0.2` on every play's shot list (not the teaser) so hr-assemble can blend the cuts. vcam prints the handles it actually got (clamped at the ends of the file).
 
 **Per source** (`media.clips.<clip>`):
 - Portrait phone clips are already 9:16. For them, vcam only zooms and pans inside the frame.
 - VFR clips are fine; vcam renders constant frame rate.
-- Very wide AI-camera sources (`camera_type` ai_panoramic) need more keys and a higher base zoom (1.3+). The subject is small in a panorama.
+- Very wide AI-camera sources (`camera_type` ai_panoramic) need more keys and a higher base zoom (up to 1.3). The subject is small in a panorama.
 
 ## 2. Teaser (cold open)
 Write a second shot list, `<clip>_teaser.json`, with `in`/`out_t` from `select.teaser`. Keys: the player → `"move":"fast"` to the ball, then `"freeze": {"t": <freeze_t>, "dur": <freeze_dur>}` and `"whip_out": true`.

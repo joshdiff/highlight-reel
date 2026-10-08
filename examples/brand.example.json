@@ -10,5 +10,5 @@
   "outro": "outro.mov",
   "music": { "folder": "music", "volume_db": -16, "duck": true, "license_note": "Tracks licensed for social use (Artlist, 2026)" },
   "loudness": { "social": -14, "landscape": -16 },
-  "grade": { "cdl": { "slope": 1.02, "offset": 0.0, "power": 1.0, "sat": 1.35 }, "creative_lut": null }
+  "grade": { "cdl": { "slope": 1.02, "offset": 0.0, "power": 1.0, "sat": 1.1 }, "creative_lut": null }
 }

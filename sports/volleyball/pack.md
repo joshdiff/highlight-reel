@@ -32,5 +32,5 @@ Numbers are on the front and back. The **libero wears a different colour** from 
 | Dig | BALL → PLAYER → BALL | centre on the digger at contact, then follow the ball up to the setter and through the attack; for a digger's reel, come back to them on the point celebration |
 | Set (setter reel) | PLAYER → BALL → HITTER | on the setter at the set; follow the ball to the hitter and through the attack |
 
-The ball travels high, so vertical framing needs `y` keyframes. Use 30–40 when the ball is above the net, and 50–60 during floor play. Keep zoom ≤1.2 during rallies; the ball moves faster than the frame can follow at higher zoom.
+The ball travels high, so vertical framing needs `y` keyframes. Use 30–40 when the ball is above the net, and 50–60 during floor play. Keep zoom at 1.0 (≤1.1) during rallies; the ball moves faster than the frame can follow at higher zoom.
 (team) The frame follows the ball through the rally and settles on the player who wins the point.

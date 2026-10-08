@@ -24,7 +24,7 @@ $ARGUMENTS
      - ducked under the game audio;
      - loudness to the brand target (−14 LUFS social, −16 LUFS landscape).
    - **Encode:** H.264 high, CRF 18 capped at 14/20/25 Mb/s, 29.97 CFR, Rec.709 tags, faststart → `<deliverable>/finished/<aspect>.mp4`.
-2. **Grade check** (printed per aspect: 8 sampled frames vs the bar: luma 0.36–0.45, saturation ≥0.35, clipping <1%). Look at a contact sheet of the file too. Grass-heavy or overcast frames can sit just under the luma bar and still look right; trust the picture, but fix a whole reel that's dark, flat or clipped:
+2. **Grade check** (printed per aspect: 8 sampled frames vs the bar: luma 0.36–0.45, vivid (extreme-saturation pixels) <0.5%, clipping <1%). Look at a contact sheet of the file too. Grass-heavy or overcast frames can sit just under the luma bar and still look right; trust the picture, but fix a whole reel that's dark, flat or clipped:
    ```
    hrstate.py deliv set grade.cdl.<encoding> '{"slope": 1.05, "offset": 0, "power": 1.0, "sat": 1.35}'
    python3 $S/finish.py --aspect <aspect>
@@ -40,3 +40,4 @@ Every aspect has a finished file. The grade check passes, or its misses are judg
 - The built-in LUTs are neutral technical transforms. An official manufacturer LUT, or the videographer's own creative LUT, gives the house look.
 - One CDL per encoding per reel; no shot-to-shot balancing.
 - The FCPXML handoff is well-formed XML but hasn't been test-imported into Final Cut or Premiere yet.
+- Plays are still joined with hard cuts here; the Resolve path blends them with 0.2s dissolves. Planned: ffmpeg `xfade` using the reframes' handles (vcam `"handles"`), trimming them like hr-assemble does.

@@ -26,8 +26,8 @@ Numbers are large on the front AND back, which makes this the most reliable spor
 ## Director rules — who the frame follows
 | Moment | Subject | Framing |
 |---|---|---|
-| Ball-handler (dribble/drive) | PLAYER | centre on them, lead room toward the basket; zoom 1.15–1.3; keep the defender in frame on a drive |
-| Crossover / move | PLAYER + defender | centre between them, +0.1 zoom for the move |
+| Ball-handler (dribble/drive) | PLAYER | centre on them, lead room toward the basket; zoom 1.0 (1.1 at most); keep the defender in frame on a drive |
+| Crossover / move | PLAYER + defender | centre between them, keep zoom |
 | SHOT (jumper / three) | PLAYER → BALL → RIM | stay on the shooter through the release; `"move":"fast"` to the rim as the ball leaves the hand (the rim is the destination, not the ball's arc); hold the rim through the make ~0.5s |
 | — MAKE | RIM → SHOOTER | smooth pan back to the shooter (0.6–1.0s) for the reaction / back-pedal; end ~1.5s later |
 | — MISS / BLOCK | RIM → rebound / blocker | follow the ball off the rim to the rebound; on a block, the blocker is the subject from contact |
@@ -36,4 +36,4 @@ Numbers are large on the front AND back, which makes this the most reliable spor
 | Steal | BALL → PLAYER | centre on the deflection, then follow the player up the court |
 
 (team) Follow the ball-handler and switch with every pass; on a make, pan to the scorer.
-Vertical crops suit basketball: the rim and the shooter usually fit together at zoom 1.0–1.2.
+Vertical crops suit basketball: the rim and the shooter usually fit together at zoom 1.0.

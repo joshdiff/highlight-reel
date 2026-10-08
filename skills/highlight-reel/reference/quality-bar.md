@@ -8,8 +8,9 @@ Learned by comparing an automated reel with a hand-cut one. The skill must reach
   1. Cold-open teaser: the best scoring play, frozen before the outcome, with the name lower third, whip out.
   2. Varied-length sequences, strongest first.
   3. The teaser play in full at the end, through the reaction/celebration.
-- **The frame is directed.** It follows the player while they have the ball, switches to the ball the instant they shoot/pass/attack, holds on the outcome, then pans back to the scorer and stays through the celebration. It punches in on 1v1 moments.
-- **Natural grade:** no clipped sky or gym lights, true shirt colour, a rich playing surface. Measured: mean luma 0.36–0.45, mean saturation ≥0.35, clipped <1%.
+- **The frame is directed.** It follows the player while they have the ball, switches to the ball the instant they shoot/pass/attack, holds on the outcome, then pans back to the scorer and stays through the celebration. It does not punch in: zoom stays at 1.0.
+- **Natural grade — it should look real.** No clipped sky or gym lights, shirts their true colour (a pale kit stays pale), grass green but not neon. Measured: mean luma 0.36–0.45, under 0.5% of pixels at extreme saturation ("vivid"), clipped <1%. Never push saturation to hit a number; an overcast day looks overcast.
+- **Wide, calm framing.** 9:16 from 16:9 already crops to a third of the width, so keep zoom at 1.0 and let the viewer see the play around the player. The window moves like a camera operator: still while the player stays near centre, eased when it has to follow, never jittering with the detections.
 - **Every claim is verified on rendered frames,** not on settings read back.
 
 ## Modes and deliverables
@@ -38,4 +39,5 @@ A deliverable can request several aspects (9:16, 1:1, 4:5, 16:9); each gets its 
 - A game can mix cameras and footage types. Camera, encoding, orientation, fps and VFR are per clip in `media.clips`; never assume one camera per game.
 - Times in find/select/shot lists are SOURCE-FILE seconds (absolute in the file), even for segments of long files.
 - Resolve 21.1 via the davinci-resolve MCP: Pan keyframes are unavailable (`add_keyframe` → "'NoneType' object is not callable"), which is why reframing is done by `vcam.py`. Titles need the nested-timeline route (hr-title).
+- If Resolve reports "Full resolution media not found" / a clip reads Offline although the file exists (e.g. renamed on disk after import), `media_pool_item` → `replace_clip` with the current path relinks it in place; the timeline items keep their trims and grades. Re-set its Input Color Space after (replace resets it to Project).
 - Resolve frame captures/renders can start failing on EVERY clip with "Error decoding full resolution media for <clip>" after many captures and timeline switches, although the files decode fine with ffmpeg. Save the project, load another project, then load it back (loading the open project is a no-op) and set the delivery timeline current; captures then work.

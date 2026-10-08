@@ -24,8 +24,8 @@ The number is large on the back and small or illegible on the front. Front-facin
 ## Director rules — who the frame follows
 | Moment | Subject | Framing |
 |---|---|---|
-| Has the ball (possession / dribble) | PLAYER | centre on them, ~8% lead room toward where they're running; zoom 1.3–1.4 when they're small in the source, 1.0–1.15 when close |
-| 1v1 take-on | PLAYER + defender | centre between them, punch in +0.15 zoom for the beat, ease back out after they're past |
+| Has the ball (possession / dribble) | PLAYER | centre on them, ~8% lead room toward where they're running; zoom 1.0 (1.1 at most when they're tiny in a wide shot) |
+| 1v1 take-on | PLAYER + defender | centre between them, keep zoom — the 1v1 reads better with space around it |
 | SHOOTS | BALL | at the kick frame add a key with `"move":"fast"` on the ball (reach it ≤0.25s), lead toward goal, follow the ball to the outcome |
 | — GOAL | BALL → NET → PLAYER | hold on the ball in the net 0.4–0.6s; smooth pan back to the scorer over ~0.8–1.2s; stay on them as they react; widen to zoom 1.0 when ≥2 teammates arrive; end 1–2s into the hug (≈3–5s after the goal) |
 | — SAVE / MISS | BALL → keeper/goal | hold the save or the ball going wide ~0.5s, then end (no pan back) |

@@ -23,12 +23,13 @@ $ARGUMENTS
 
 ## 1. (player) Identify — crop sheets, then confirm densely
 1. `python3 $S/crops.py --team <side>` → `sheets/<side>/crops_NN.jpg` + `crops_meta.json`. Read every sheet next to the refsheet.
+   Then `python3 $S/subject.py --team <side>` (~1 min per 100 clips; 4 parallel jobs) → `sheets/subject/subj_NN.jpg` + `subj_meta.json`: the player the camera operator is following, once per second, for every clip. Read all of them too. They show a whole possession, so on-ball moments, look cues and the back number turn up where the 5 crop samples caught nothing (in testing they surfaced 3 of a reel's 7 plays that the crop sheets missed). Their `subj_meta.json` boxes work as `ref` boxes.
 2. Check cues in the order the brief ranks them (e.g. "hair 90%, number 40%" means look at hair first). Mark each clip:
    - **CONFIRMED:** the number legible on the right shirt, OR two independent strong cues that match the refs.
    - **CANDIDATE:** one cue matches.
    - **NO.**
 3. **Decoys:** everything in the profile's decoys, plus always the same number on the other team and similar numbers (#17/#7, #3/#23/#33). Reject them, and record any NEW decoy in the target's `decoys_met`.
-4. The 5-sample pass misses clips. For every CANDIDATE, and every clip where a target-team player is close to camera with the ball, run `python3 $S/vgrid.py <clip> <in> <out> <clip>_2fps.jpg 2` over the segment and look for the number. Promote to CONFIRMED only when it's seen in the same continuous action.
+4. The 5-sample pass misses clips. For every CANDIDATE, every clip where the subject strips show them on the ball, and every clip where a target-team player is close to camera with the ball, run `python3 $S/vgrid.py <clip> <in> <out> <clip>_2fps.jpg 2` over the segment and look for the number. Promote to CONFIRMED only when it's seen in the same continuous action.
 
 ## 1-team. (team) Find the moments instead of a player
 Skip number ID. From the overview sheets (`python3 $S/sheets.py`) and the `src2fps/` thumbnails, flag the pack's events using its "signals" list. Confirm it's the TARGET team's moment by shirt colour. Never include points or goals conceded, unless the target's save/block/dig is the highlight.

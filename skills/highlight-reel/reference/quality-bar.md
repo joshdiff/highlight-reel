@@ -38,3 +38,4 @@ A deliverable can request several aspects (9:16, 1:1, 4:5, 16:9); each gets its 
 - A game can mix cameras and footage types. Camera, encoding, orientation, fps and VFR are per clip in `media.clips`; never assume one camera per game.
 - Times in find/select/shot lists are SOURCE-FILE seconds (absolute in the file), even for segments of long files.
 - Resolve 21.1 via the davinci-resolve MCP: Pan keyframes are unavailable (`add_keyframe` → "'NoneType' object is not callable"), which is why reframing is done by `vcam.py`. Titles need the nested-timeline route (hr-title).
+- Resolve frame captures/renders can start failing on EVERY clip with "Error decoding full resolution media for <clip>" after many captures and timeline switches, although the files decode fine with ffmpeg. Save the project, load another project, then load it back (loading the open project is a no-op) and set the delivery timeline current; captures then work.

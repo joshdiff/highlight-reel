@@ -332,12 +332,12 @@ def _game_board(g):
              f"clips={len(gj.get('media', {}).get('clips', {}))} cameras={cams or '-'}",
              f"   {_mark(gj.get('stages', {}), GAME_STAGES)}"]
     td = os.path.join(g, 'targets')
-    for t in sorted(os.listdir(td)) if os.path.isdir(td) else []:
+    for t in sorted(x for x in os.listdir(td) if os.path.isdir(os.path.join(td, x))) if os.path.isdir(td) else []:
         tj = _read(os.path.join(td, t, 'find.json'), {})
         who = tj.get('player_id') or f"team {tj.get('team_id') or tj.get('side')}"
         lines.append(f"   target {t:18s} {who:20s} {_mark(tj.get('stages', {}), TARGET_STAGES)}")
     dd = os.path.join(g, 'deliverables')
-    for d in sorted(os.listdir(dd)) if os.path.isdir(dd) else []:
+    for d in sorted(x for x in os.listdir(dd) if os.path.isdir(os.path.join(dd, x))) if os.path.isdir(dd) else []:
         dj = _read(os.path.join(dd, d, 'deliv.json'), {})
         out = (dj.get('export') or {}).get('files') or ''
         lines.append(f"   deliv  {d:18s} {dj.get('type', ''):15s} {','.join(dj.get('aspects', []))} "
@@ -415,7 +415,7 @@ def calibrated(team, enc):
 # ---------- cleanup ----------
 def clean(gid=None, force=False):
     g = game_dir(gid); dd = os.path.join(g, 'deliverables')
-    delivs = os.listdir(dd) if os.path.isdir(dd) else []
+    delivs = [x for x in os.listdir(dd) if os.path.isdir(os.path.join(dd, x))] if os.path.isdir(dd) else []
     pending = [d for d in delivs if 'export' not in _stages_done(os.path.join(dd, d), 'deliv.json')]
     if pending and not force:
         sys.exit(f'not cleaning: deliverables not exported yet: {pending} (use --force)')

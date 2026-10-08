@@ -116,7 +116,7 @@ def match(sig, profs=None):
     return None
 
 
-PRESETS_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'presets', 'cameras'))
+PRESETS_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'presets', 'cameras'))
 
 
 def presets():

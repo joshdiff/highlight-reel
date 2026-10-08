@@ -21,6 +21,8 @@ $ARGUMENTS
 
 Make a 5 fps grid over the window, `python3 $S/vgrid.py <clip> <in> <out> <clip>.jpg`, and read positions off its 0–100 ruler (source width). Add a key at every change of subject or direction, and every ~0.4–0.8s while the subject moves; add more keys during fast motion. Each key may set `y` (0–100) when the action moves vertically (volleyball attacks, basketball rims). Otherwise set the shot list's default `y` to the subject's vertical position.
 
+Then **track the on-ball phase densely:** `python3 $S/track.py <shotlist>` follows the player at 8 fps from `in` to the first ball key or `"move":"fast"` (the shot or pass) and replaces your player keys there, keeping their zoom and every key after. Hand-read keys at 2–5 fps lose a close subject when the operator swings fast (in testing, a close take-on lost the player from the 9:16 window four times with 2 fps keys; tracked, they stayed in every sample). Pass `--x0 X` when the first frame has a decoy nearer the centre (e.g. an opponent with the same number). Run it before rendering; the contact-sheet check still decides.
+
 **Constraints (all sports):**
 - The subject stays inside the middle 60% of the window, except during a ≤0.25s whip (`"move":"fast"`).
 - Never chase a subject the camera operator didn't keep in the source frame; hold the last good x.
@@ -60,5 +62,5 @@ Then `hrstate.py deliv done direct "<N renders>"`.
 Every play in `select` (plus the teaser) has a checked render for every aspect that needs one.
 
 ## Known gaps
-- Keys are hand-read from grids. Planned: seed a box on the player and let an OpenCV tracker propose the x/y path; the director rules then apply on top.
+- `track.py` follows shirt colour, so in a crowd of teammates it can jump to the biggest nearby one; ball and outcome keys are still hand-read from grids. Planned: an appearance-based tracker seeded from the profile's reference crops.
 - No `vcheck.py`: the contact-sheet check is a manual ffmpeg call.

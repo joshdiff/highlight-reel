@@ -5,7 +5,7 @@ Usage: python3 sports.py list | show SPORT | events SPORT | deliverable SPORT TY
 import json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-SPORTS_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'sports'))
+SPORTS_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'sports'))
 ALIASES = {'goals_reel': 'scoring_reel'}
 
 

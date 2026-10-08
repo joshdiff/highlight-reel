@@ -9,7 +9,7 @@ d=tempfile.mkdtemp(); RNG=hrstate.team_hsv(os.path.splitext(os.path.basename(src
 import json
 _v=json.loads(subprocess.run([hrstate.tool('ffprobe'),'-v','error','-select_streams','v:0','-show_entries','stream=width,height','-of','json',src],capture_output=True,text=True).stdout)['streams'][0]; W,H=int(_v['width']),int(_v['height'])
 IW=960 if W/H>=960/540 else round(540*W/H); X0=(960-IW)//2   # image area inside the padded tile
-subprocess.run([hrstate.tool('ffmpeg'),'-nostdin','-v','error','-ss',str(a),'-i',src,'-t',str(b-a),'-vf',f'fps={fps},scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2','-q:v','3',f'{d}/g_%04d.jpg'],check=True)
+subprocess.run([hrstate.tool('ffmpeg'),'-nostdin','-v','error','-ss',str(a),'-i',src,'-t',str(b-a),'-vf',f'fps={fps},scale=960:540:force_original_aspect_ratio=decrease,pad=960:540:(ow-iw)/2:(oh-ih)/2','-strict','unofficial','-q:v','3',f'{d}/g_%04d.jpg'],check=True)
 tiles=[]
 for i,f in enumerate(sorted(glob.glob(d+'/g_*.jpg'))):
     im=cv2.imread(f); vis=cv2.convertScaleAbs(im,alpha=1.5,beta=-40)

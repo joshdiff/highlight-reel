@@ -32,3 +32,4 @@ Every item's stats are in range.
 ## Known gaps
 - A game-specific .drx graded by the videographer beats the generic one. If they supply one, use it and still do step 2.
 - One CDL per encoding group; shot-to-shot balancing (sun vs. cloud) isn't done.
+- On overcast footage mean saturation can stay under the 0.35 bar: with the DarrenMostyn DRX, SPARE-node CDL saturation plateaus around 0.33 above ~2.4 (measured on Canon Log 3: 2.4 → 3.3 moved it under 0.01; 1.0 → 2.7 moved it 0.15). Don't push past what looks natural; record the stats and flag it.

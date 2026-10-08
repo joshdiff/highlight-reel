@@ -2,7 +2,14 @@
 
 Workspace = <output_folder>/_hr/<team_name> - <event_name>/  holding reel.json and all
 working files (frames/, frames_4k/, src2fps/, sheets/, grids/, shotlists/, reframed/).
-The current workspace is remembered in ~/.hr_work/current; every script uses it.
+The current workspace is remembered in $HR_HOME/current; every script uses it.
+
+Three layers of data, none of it in the repo:
+  $HR_HOME/config.json        machine/install: media_root, output_folder, power_grade_drx, camera_profile,
+                              ffmpeg, ffprobe  (written by install.sh or /hr-config)
+  $HR_HOME/players|teams/     profiles built up across games (hrprofile.py)
+  <workspace>/reel.json       this game: settings (incl. player_id, team_id, kit), results of each stage
+HR_HOME defaults to ~/.hr_work.
 
 CLI (python3 hrstate.py ...):
   init --team T --event E --output DIR [--source DIR]   create (or reopen) a workspace, make it current
@@ -15,12 +22,11 @@ CLI (python3 hrstate.py ...):
   merge KEY FILE.json  deep-merge a JSON file into KEY
   done STAGE [NOTE]    mark a stage complete
   reset STAGE          mark a stage (and every later stage) not done
-  config [KEY [VALUE]] machine-local defaults in ~/.hr_work/config.json (media_root, output_folder,
-                       power_grade_drx, camera_profile) — never part of the repo
+  config [KEY [VALUE]] show / read / write the machine config
 """
 import json, os, sys, time, tempfile
 
-HOME = os.path.expanduser('~/.hr_work')
+HOME = os.path.expanduser(os.environ.get('HR_HOME', '~/.hr_work'))
 CURRENT = os.path.join(HOME, 'current')
 REGISTRY = os.path.join(HOME, 'registry.json')
 CONFIG = os.path.join(HOME, 'config.json')
@@ -94,10 +100,47 @@ def set_(key, value, merge=False):
     save(s)
 
 
-def team_hsv():
-    """OpenCV HSV (H 0-180) range of our jersey; default = light-blue shirts on Canon Log 3."""
-    h = get('calibration.team_hsv')
-    return (tuple(h['lo']), tuple(h['hi'])) if h else ((99, 30, 76), (116, 97, 180))
+def config(key=None, default=None):
+    c = _read(CONFIG, {})
+    return c if key is None else c.get(key, default)
+
+
+def tool(name):
+    """Path of ffmpeg/ffprobe: config, else PATH, else Homebrew."""
+    import shutil
+    return config(name) or shutil.which(name) or f'/opt/homebrew/bin/{name}'
+
+
+DEFAULT_HSV = {'canon_clog3': ((99, 30, 76), (116, 97, 180))}   # light-blue shirts; other encodings: calibrate
+_warned = set()
+
+
+def encoding_of(clip=None):
+    """Colour encoding of a clip (from cameras.py assign), else the game's most common one."""
+    if clip:
+        e = get(f'media.clips.{clip}.encoding')
+        if e:
+            return e
+    cams = get('media.encodings') or {}
+    return max(cams, key=cams.get) if cams else 'canon_clog3'
+
+
+def team_hsv(clip=None):
+    """OpenCV HSV (H 0-180) range of our jersey FOR THIS CLIP'S ENCODING (Log and Rec.709 footage of the
+    same shirt sit in different ranges): this game's calibration.team_hsv[enc], else the team profile's
+    kits[settings.kit].hsv[enc], else the built-in default for that encoding."""
+    enc = encoding_of(clip)
+    h = (get('calibration.team_hsv') or {}).get(enc)
+    if not h and get('settings.team_id'):
+        import hrprofile
+        h = hrprofile.kit_hsv(get('settings.team_id'), get('settings.kit', 'home'), enc)
+    if h:
+        return tuple(h['lo']), tuple(h['hi'])
+    if enc not in DEFAULT_HSV and enc not in _warned:
+        _warned.add(enc)
+        print(f'hrstate: no jersey calibration for encoding {enc!r} — using the Canon Log default; '
+              f'calibrate it (hr-survey step 3)', file=sys.stderr)
+    return DEFAULT_HSV.get(enc, DEFAULT_HSV['canon_clog3'])
 
 
 def _set_current(p):

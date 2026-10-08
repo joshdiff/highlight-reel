@@ -30,7 +30,9 @@ $ARGUMENTS
 
 (team) On a PASS the receiver becomes the new subject — keep following the play, never return to the passer; on a GOAL pan back to whoever SCORED; the assist "return to her" rule is player-mode only; on a keeper SAVE the keeper is the subject from the shot onward.
 
-**Constraints:** subject inside the middle 60% of the window except during a ≤0.25s whip; zoom 1.0–1.5 (beyond 1.5 the 4K upscale softens); never chase a subject the camera operator didn't keep in the source frame — hold the last good x.
+**Constraints:** subject inside the middle 60% of the window except during a ≤0.25s whip; never chase a subject the camera operator didn't keep in the source frame — hold the last good x.
+
+**Per source (check `media.clips.<clip>`):** zoom 1.0–1.5 on ≥4K sources; ≤1080p sources are capped at 1.15 by vcam (already upscaled ~1.8×) — prefer 4K angles when the same moment exists twice. Portrait sources (`orientation: portrait`, phones held upright) are already 9:16: vcam only zooms/pans inside them, so keep zoom ≤1.15 and x near 50 unless the player is at an edge. VFR clips are fine — vcam renders constant frame rate.
 
 ### Teaser (cold open)
 Second shot list `shotlists/<clip>_teaser.json` with `"out": "<workspace>/reframed/<clip>_teaser_vc.mov"`: `in`/`out_t` from `select.teaser`; keys: her → `"move":"fast"` to the ball; `"freeze": {"t": <freeze_t>, "dur": <freeze_dur>}`, `"whip_out": true`.

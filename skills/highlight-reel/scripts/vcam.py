@@ -16,7 +16,8 @@ shotlist.json:
   "freeze": {"t": 4.5, "dur": 1.5},         # optional: hold this source time (cold-open teaser)
   "whip_out": true                          # optional: horizontal blur ramp on the last 0.2s
 }
-zoom 1.0 = full-height 9:16 window; 1.3 = 30% tighter. move "fast" = whip to that key
+zoom 1.0 = full-height 9:16 window; 1.3 = 30% tighter (capped at 1.5 for 4K sources, 1.15 for <=1080p;
+portrait sources are already 9:16 — zoom/pan only). move "fast" = whip to that key
 (shot/pass), default "smooth" = eased follow.
 Output: ProRes 422 HQ 10-bit, Log preserved (no colour change), audio PCM.
 """
@@ -25,15 +26,17 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hrstate
 
-FF = '/opt/homebrew/bin/ffmpeg'; FP = '/opt/homebrew/bin/ffprobe'
+FF = hrstate.tool('ffmpeg'); FP = hrstate.tool('ffprobe')
 
 
 def probe(src):
-    o = subprocess.run([FP, '-v', 'error', '-select_streams', 'v:0', '-show_entries',
-                        'stream=width,height,r_frame_rate', '-of', 'csv=p=0', src],
-                       capture_output=True, text=True).stdout.strip().split(',')
-    n, d = o[2].split('/')
-    return int(o[0]), int(o[1]), float(n) / float(d)
+    v = json.loads(subprocess.run([FP, '-v', 'error', '-select_streams', 'v:0', '-show_entries',
+                                   'stream=width,height,avg_frame_rate,r_frame_rate', '-of', 'json', src],
+                                  capture_output=True, text=True).stdout)['streams'][0]
+    n, d = (v.get('avg_frame_rate') or v['r_frame_rate']).split('/')
+    if not float(d) or not float(n):
+        n, d = v['r_frame_rate'].split('/')
+    return int(v['width']), int(v['height']), float(n) / float(d)
 
 
 def path(keys, t0, t1, fps):
@@ -72,9 +75,17 @@ def main(spec_path):
     ts, xs, zs = path(s['keys'], t0, t1, fps)
     yc = s.get('y', 50) / 100.0
     cmds = []
+    # Mixed footage: a portrait source (phone held upright) is already 9:16 — zoom only, centred on x/y.
+    # A <=1080p landscape source is already upscaled ~1.8x at zoom 1.0, so cap zoom at 1.15.
+    portrait = H > W
+    zmax = 1.5 if H >= 2000 else 1.15
+    zs = np.minimum(zs, zmax)
     for i, (t, x, z) in enumerate(zip(ts, xs, zs)):
-        ch = int(round(H / max(z, 1.0) / 2) * 2)          # crop height (even)
-        cw = int(round(ch * 9 / 16 / 2) * 2)              # 9:16 width (even)
+        if portrait:
+            cw = int(round(min(W, H * 9 / 16) / max(z, 1.0) / 2) * 2); ch = int(round(cw * 16 / 9 / 2) * 2)
+        else:
+            ch = int(round(H / max(z, 1.0) / 2) * 2)      # crop height (even)
+            cw = int(round(ch * 9 / 16 / 2) * 2)          # 9:16 width (even)
         cx = min(max(x / 100.0 * W - cw / 2, 0), W - cw)  # clamp: never show black edges
         cy = min(max(yc * H - ch / 2, 0), H - ch)
         rt = i / fps

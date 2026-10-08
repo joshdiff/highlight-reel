@@ -21,5 +21,6 @@ PLAYER mode features one player ("the featured player" / "she" in these docs). T
 ## Environment facts
 - Scripts: the highlight-reel skill's `scripts/` folder (`$S`, located by the `find` one-liner at the top of each stage). Run python WITHOUT `-I` (cv2/scipy live in user site-packages). ffmpeg/ffprobe at `/opt/homebrew/bin/`.
 - Use python, never `bc`, for timestamp maths (bc drops the leading zero and ffmpeg rejects ".29").
-- Machine-local defaults (media root, output folder, power-grade .drx, camera) live in `~/.hr_work/config.json` via `hrstate.py config` — never in the skill files. Media is expected as `<media_root>/<season>/<team>/<game>/`.
+- Machine settings (`hrstate.py config`), player/team profiles (`hrprofile.py`) and camera profiles (`cameras.py`) live in `~/.hr_work/` — never in the skill files. Media is expected as `<media_root>/<season>/<team media_folder>/<game>/`.
+- Footage can mix cameras and encodings in one game (Log mirrorless + phone HDR + previously exported reels). Camera, encoding, orientation, fps and VFR are per clip in `media.clips`; never assume one camera per game.
 - Resolve 21.1 via the davinci-resolve MCP: Pan keyframes unavailable (`add_keyframe` → "'NoneType' object is not callable") — that's why reframing is done by `vcam.py`, not Resolve. Titles need the nested-timeline route (hr-title).

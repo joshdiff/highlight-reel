@@ -1,6 +1,6 @@
 ---
 name: hr-export
-description: Highlight reel stage 10 — render the delivery timeline to MP4 at the deliverable's spec, verify the file (ffprobe + frames per clip), write the final report, and update memory.
+description: Highlight reel stage 10 — render the delivery timeline to MP4 at the deliverable's spec, verify the file (ffprobe + frames per clip), write the final report, and update the player/team/camera profiles with what this game taught.
 ---
 
 # hr-export — render, verify, report
@@ -18,7 +18,10 @@ $ARGUMENTS
 2. Verify the FILE: ffprobe resolution / fps / bitrate / duration; extract one frame per clip (mid-item, from `resolve.items` record frames) into `checks/export_NN.jpg` and look at them — right clip order, grade looks natural, lower third on the teaser.
 3. `hrstate.py set export '{"file": "...", "width": .., "height": .., "fps": .., "kbps": .., "duration": ..}'`; `hrstate.py done export`.
 4. **Final report:** the file and its stats; each clip with its beat (e.g. "take-on past #4, 7s") and what the camera did; anything uncertain (from stage notes — e.g. a CANDIDATE you couldn't confirm).
-5. **Memory:** (player) if this player had no memory note, write one (name, number, team, jersey colour, grad year, visual identifiers relied on — hair style, boots, sleeves — number decoys seen, `calibration.team_hsv` if non-default) and add it to MEMORY.md; update an existing note with anything new. (team) record team colours and this opponent's colours. This is what makes hr-setup's pick-lists offer them next time.
+5. **Update the profiles** (this is how the next reel gets better — never write these details into the repo):
+   - player: fill empty `appearance` fields with identifiers you actually relied on; add new `decoys`; `hrprofile.py note player <id> "<lesson>"` for anything that changed how you worked (a missed clip and why, a camera angle that hid the number); append to `games` {date, event, team_id, deliverable, output file, best_clips {clip: beat}}; add the season to the team membership if missing.
+   - team: `kits.<kit>.hsv.<encoding>` already saved by hr-survey; add teammates you identified to `roster`; opponent colours under `opponents`.
+   - camera: a note if a camera needed special handling (wrong picture profile, VFR, a CDL that worked).
 
 ## Done when
 ffprobe matches the spec, the duration matches the delivery timeline, and the extracted frames look right.

@@ -16,6 +16,8 @@ $ARGUMENTS
 
 ## Steps
 1. **Selects** `_SELECTS_[player_number|Team]_[event_name]` (in `_SEQUENCES`): 1920×1080 from the ORIGINAL clips trimmed to each `select.sequence` window — kept for later re-use.
+Mixed sources: 59.94/29.97 conform cleanly; 24/25 fps clips judder on 29.97 — prefer another angle, or accept and note it. VFR phone clips used directly (16:9 deliverables) should first be transcoded to constant-rate ProRes in the workspace and imported instead of the original.
+
 2. **Delivery** `[deliverable_type]_[event_name]`: create, then `timeline` → `set_setting` useCustomSettings=1, timelineResolutionWidth/Height (1080×1920 social; 1920×1080 otherwise). Read back resolution and timelineFrameRate (29.97 from hr-project — 59.94 sources conform cleanly; 24 judders).
    - social_reel: teaser reframe → each `select.sequence` reframe in order (finale last). Cuts only — the teaser carries its own whip-out.
    - 16:9: the original clips trimmed to the `select.sequence` windows.

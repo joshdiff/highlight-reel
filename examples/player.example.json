@@ -1,0 +1,21 @@
+{
+  "id": "alex",
+  "name": "Alex Example",
+  "nickname": null,
+  "grad_year": 2031,
+  "lower_third": { "line1": "Alex Example", "line2": "Riverside FC - c/o 2031" },
+  "appearance": {
+    "hair": "dark, shoulder length, high ponytail",
+    "build": "shortest on the team",
+    "boots": "bright orange",
+    "accessories": ["white headband"],
+    "other": ["long sleeves under the jersey"]
+  },
+  "teams": [
+    { "team_id": "riverside-fc", "number": 10, "position": "winger", "seasons": ["2026 Fall"], "active": true },
+    { "team_id": "central-hs", "number": 4, "position": "midfield", "seasons": ["2026 HS"], "active": false }
+  ],
+  "decoys": ["Riverside #19 (same kit, similar hair)", "opponents often wear #10 too"],
+  "notes": [{ "date": "2026-09-14", "text": "Number hidden on wet days — the orange boots were the reliable identifier." }],
+  "games": [{ "date": "2026-09-14", "event": "Lakeside", "team_id": "riverside-fc", "best_clips": { "C0042": "goal" } }]
+}

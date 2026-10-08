@@ -9,6 +9,11 @@ $ARGUMENTS
 
 The reel is built by ten stage skills that share one per-game workspace and its `reel.json`. This command runs them in order; each one can also be run on its own (`/hr-grade` to redo just the grade, etc.).
 
+Data lives in three layers, all local (never in the repo):
+- **Machine** — `/hr-config` (or `install.sh`): media root, output folder, default grade, ffmpeg.
+- **Profiles** — `/hr-profile`: players (team & number, look, decoys, lower third), teams (kits + calibrated jersey colour per footage encoding, roster, opponents), cameras (how to recognise each camera's clips, its colour encoding). A game can mix cameras; everything colour-related is decided per clip.
+- **Game** — `reel.json` in the game workspace, written by the stages below.
+
 | # | Stage | Command | Needs Resolve | Produces (in reel.json) |
 |---|---|---|---|---|
 | 1 | Setup | `/hr-setup` | no | `settings.*`, the workspace |
@@ -26,7 +31,7 @@ The reel is built by ten stage skills that share one per-game workspace and its 
 
 ## Procedure
 
-1. Read `$S/../reference/quality-bar.md` and the memory notes for this team/player.
+1. Read `$S/../reference/quality-bar.md`. If `hrstate.py config` has no media_root, do `/hr-config` first.
 2. Parse `$ARGUMENTS`:
    - empty, or describes a new reel → run **hr-setup** (the only stage that asks questions).
    - `status` → `hrstate.py status` and stop.
@@ -35,7 +40,7 @@ The reel is built by ten stage skills that share one per-game workspace and its 
 3. For each stage from the starting point: read the `hr-<stage>` skill's SKILL.md (`$S/../../hr-<stage>/SKILL.md`) and follow it exactly, including its "Done when" checks, then `hrstate.py done <stage> "<one-line note>"`. Proceed to the next stage without asking.
 4. After setup, work autonomously to the end — no more questions. Make reasonable calls and continue; record uncertain calls in the stage note so the final report can list them.
 5. Skip stages that don't apply (hr-direct renders only for social_reel — for 16:9 deliverables it still decides windows; see its doc).
-6. Final report (after hr-export): output file and ffprobe stats; each clip with its beat (e.g. "take-on past #4, 7s") and what the camera did; anything uncertain (e.g. a CANDIDATE you couldn't confirm); then update memory (see hr-export).
+6. Final report (after hr-export): output file and ffprobe stats; each clip with its beat (e.g. "take-on past #4, 7s") and what the camera did; anything uncertain (e.g. a CANDIDATE you couldn't confirm); then the profile updates (see hr-export).
 
 If a stage fails in a way you can't fix, stop, leave the earlier stages marked done, and tell the user the exact command to resume (`/highlight-reel resume`).
 

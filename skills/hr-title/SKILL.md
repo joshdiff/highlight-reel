@@ -14,7 +14,7 @@ $ARGUMENTS
 `insert_title` fails and `insert_fusion_title` lands at the unsettable playhead and can't be moved — so use a NESTED TITLE TIMELINE:
 1. In `GRAPHICS` create `TITLE_[player_number|Team]_[event_name]` at the delivery resolution; `insert_fusion_title` "Text+".
 2. `timeline` → `set_title_text` (pass `timeline_item_id`):
-   - player mode: line 1 `[player_name]`, line 2 `[team_name] - c/o [grad_year]` (fallback `#[player_number] | [team_name]`).
+   - player mode: `settings.lower_third` (from the player profile's `lower_third`; default line 1 `[player_name]`, line 2 `[team_name] - c/o [grad_year]`, fallback `#[player_number] | [team_name]`).
    - team mode: line 1 `[team_name]`, line 2 `vs [event_name]` (plus the score if the goals found make it clear, e.g. "vs Rovers · 2–1 W" — omit if unsure).
 3. `fusion_comp` → `set_input` on `Template`: Center [0.5, 0.25], Size ~0.07 — a compact name bar in the lower third, clear of the action.
 4. `timeline` → `get_media_pool_item`; back on the delivery timeline `add_track` video, then `append_to_timeline` that item on track 2, record_frame 0, spanning the teaser (end frame exclusive).

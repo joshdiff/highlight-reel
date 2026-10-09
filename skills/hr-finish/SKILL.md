@@ -24,6 +24,7 @@ $ARGUMENTS
      - ducked under the game audio;
      - loudness to the brand target (−14 LUFS social, −16 LUFS landscape).
    - **Encode:** H.264 high, CRF 18 capped at 14/20/25 Mb/s, 29.97 CFR, Rec.709 tags, faststart → `<deliverable>/finished/<aspect>.mp4`.
+1b. **Consistent look:** each play's correction (exposure, white balance; saturation only lowered) is solved against the sport pack's neutral-standard target by `look.py` inside finish.py — frames rendered through the colour chain, measured, re-solved until converged — and cached in `deliv.grade.look`. The same target as the Resolve path, so both finishes match.
 2. **Grade check** (printed per aspect: 8 sampled frames vs the bar: luma 0.36–0.45, vivid (extreme-saturation pixels) <0.5%, clipping <1%). Look at a contact sheet of the file too. Grass-heavy or overcast frames can sit just under the luma bar and still look right; trust the picture, but fix a whole reel that's dark, flat or clipped:
    ```
    hrstate.py deliv set grade.cdl.<encoding> '{"slope": 1.05, "offset": 0, "power": 1.0, "sat": 1.35}'

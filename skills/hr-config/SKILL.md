@@ -15,7 +15,7 @@ Machine settings live in `~/.hr_work/config.json` (set `HR_HOME` to move everyth
 |---|---|
 | `output_folder` | where finished reels go by default, and the work area `_hr/` (sessions, games, deliverables) |
 | `media_root` | folder holding `<season>/<team>/<game>/` footage (used for pick-lists; any folder works) |
-| `power_grade_drx` | default .drx for the Resolve path (optional) |
+| `power_grade_drx` | optional creative .drx; NOT used by default — hr-grade solves a neutral-standard look per clip (look.py) |
 | `output_template` | default file naming when a client has none, e.g. `{team}/{date} {event}/{who}_{type}_{aspect}.mp4` |
 | `ffmpeg`, `ffprobe` | binaries (default: PATH, then `/opt/homebrew/bin`) |
 

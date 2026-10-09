@@ -13,7 +13,8 @@
       "max_area": 220,
       "max_sat": 90,
       "note": "small, white/light, ringed by green"
-    }
+    },
+    "target_luma": 0.36
   },
   "segmentation": {
     "max_clip_s": 180,
@@ -144,7 +145,7 @@
         "assist"
       ],
       "order": "chronological",
-      "each": "build-up \u2192 finish \u2192 celebration"
+      "each": "build-up → finish → celebration"
     },
     "season_reel": {
       "aspect": "9:16",

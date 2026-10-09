@@ -9,6 +9,7 @@ Learned by comparing an automated reel with a hand-cut one. The skill must reach
   2. Varied-length sequences, strongest first.
   3. The teaser play in full at the end, through the reaction/celebration.
 - **The frame is directed.** It follows the player while they have the ball, switches to the ball the instant they shoot/pass/attack, holds on the outcome, then pans back to the scorer and stays through the celebration. It does not punch in: zoom stays at 1.0.
+- **Consistent output.** Every play and every game lands on the same look: a correction is solved per clip (look.py) against a fixed neutral-standard target anchored on the playing surface, so sun, cloud and camera differences don't show. No fixed creative grade by default.
 - **Natural grade — it should look real.** No clipped sky or gym lights, shirts their true colour (a pale kit stays pale), grass green but not neon. Measured: mean luma 0.36–0.45, under 0.5% of pixels at extreme saturation ("vivid"), clipped <1%. Never push saturation to hit a number; an overcast day looks overcast.
 - **Wide, calm framing.** 9:16 from 16:9 already crops to a third of the width, so keep zoom at 1.0 and let the viewer see the play around the player. The window moves like a camera operator: still while the player stays near centre, eased when it has to follow, never jittering with the detections.
 - **Every claim is verified on rendered frames,** not on settings read back.

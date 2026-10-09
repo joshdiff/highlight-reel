@@ -12,8 +12,9 @@
       "min_area": 10,
       "max_area": 400,
       "max_sat": 255,
-      "note": "orange \u2014 similar hue to hardwood; use the rim region and motion instead of colour"
-    }
+      "note": "orange — similar hue to hardwood; use the rim region and motion instead of colour"
+    },
+    "target_luma": 0.45
   },
   "segmentation": {
     "max_clip_s": 150,
@@ -119,7 +120,7 @@
     "headgear": false,
     "kit_exceptions": [],
     "notes": [
-      "numbers are readable from both sides \u2014 best ID of the three sports",
+      "numbers are readable from both sides — best ID of the three sports",
       "shoes, arm sleeves, headbands and hair are strong secondary cues",
       "home white jerseys clip under gym lights: calibrate on a frame with correct exposure"
     ]
@@ -168,7 +169,7 @@
         "handle_score"
       ],
       "order": "chronological",
-      "each": "touch \u2192 shot \u2192 make \u2192 reaction"
+      "each": "touch → shot → make → reaction"
     },
     "season_reel": {
       "aspect": "9:16",

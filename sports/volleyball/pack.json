@@ -10,7 +10,8 @@
       "max_area": 400,
       "max_sat": 160,
       "note": "multi-colour ball, often high in the frame; the net is a fixed landmark"
-    }
+    },
+    "target_luma": null
   },
   "segmentation": {
     "max_clip_s": 120,
@@ -22,7 +23,7 @@
       20
     ],
     "dead_ball_cues": [
-      "serve setup (15\u201325s between rallies)",
+      "serve setup (15–25s between rallies)",
       "timeout huddle",
       "substitution / libero swap"
     ],
@@ -99,7 +100,7 @@
     ],
     "headgear": false,
     "kit_exceptions": [
-      "the LIBERO wears a different colour from teammates \u2014 calibrate it as a separate kit if the player is a libero"
+      "the LIBERO wears a different colour from teammates — calibrate it as a separate kit if the player is a libero"
     ],
     "notes": [
       "hair is usually tied back, so ponytail/braid colour and length still help",
@@ -150,7 +151,7 @@
         "rally_won"
       ],
       "order": "chronological",
-      "each": "serve/pass \u2192 set \u2192 attack \u2192 floor \u2192 celebration"
+      "each": "serve/pass → set → attack → floor → celebration"
     },
     "season_reel": {
       "aspect": "9:16",

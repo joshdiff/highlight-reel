@@ -92,23 +92,24 @@ def aces_fit(x):
     return np.clip((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0, 1)
 
 
-def build(enc, exposure=1.0):
+def build(enc, exposure=1.0, gains=(1.0, 1.0, 1.0)):
     dec, gam = ENC[enc]
     g = np.linspace(0, 1, N)
     b, gg, r = np.meshgrid(g, g, g, indexing='ij')        # .cube order: red fastest
     rgb = np.stack([r, gg, b], axis=-1).reshape(-1, 3)
     lin = np.einsum('ij,nj->ni', gamut_matrix(gam), dec(rgb))
-    out = aces_fit(np.clip(lin * exposure, 0, None)) ** (1 / 2.4)
+    out = aces_fit(np.clip(lin * exposure * np.asarray(gains), 0, None)) ** (1 / 2.4)   # look.py: stops + WB
     return out
 
 
-def cube_path(enc, exposure=1.0, out=None):
+def cube_path(enc, exposure=1.0, out=None, gains=(1.0, 1.0, 1.0)):
     if enc not in ENC:
         sys.exit(f'luts: no built-in transform for {enc!r} (have {list(ENC)}); set an official LUT on the camera profile')
-    out = out or os.path.join(hrstate.HOME, 'luts', f'{enc}_x{exposure:g}.cube')
+    tag = '' if tuple(gains) == (1.0, 1.0, 1.0) else '_g' + '-'.join(f'{g:.3f}' for g in gains)
+    out = out or os.path.join(hrstate.HOME, 'luts', f'{enc}_x{exposure:.4g}{tag}.cube')
     if not os.path.exists(out):
         os.makedirs(os.path.dirname(out), exist_ok=True)
-        data = build(enc, exposure)
+        data = build(enc, exposure, gains)
         with open(out, 'w') as f:
             f.write(f'TITLE "{enc} to Rec.709 (highlight-reel built-in)"\nLUT_3D_SIZE {N}\n')
             f.writelines(f'{v[0]:.6f} {v[1]:.6f} {v[2]:.6f}\n' for v in data)

@@ -13,7 +13,7 @@ delivers them.
 Usage: python3 finish.py [--aspect 9:16] [--music none|auto|FILE] [--keep]"""
 import hashlib, json, os, shutil, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import hrstate, library, luts, cameras
+import hrstate, library, luts, cameras, look
 
 FF = hrstate.tool('ffmpeg'); FP = hrstate.tool('ffprobe')
 OUT_SIZES = {'9:16': (1080, 1920), '1:1': (1080, 1080), '4:5': (1080, 1350), '16:9': (1920, 1080)}
@@ -37,12 +37,18 @@ def hex_rgb(h, a=255):
 
 
 # ---------- colour ----------
-def colour_chain(enc, camera_id, cdl, creative):
-    f = []
+def colour_chain(enc, camera_id, cdl, creative, corr=None):
+    """corr: look.py correction for this play (stops, r, b, sat) — applied in the built-in LUT's scene-linear
+    stage; with an official camera LUT it is approximated after the LUT as display-space gains."""
+    f = []; corr = corr or look.ZERO
     prof = cameras.profiles().get(camera_id or '', {})
-    lut = prof.get('lut') or (luts.cube_path(enc) if enc in luts.ENC else None)
+    lut = prof.get('lut') or (luts.cube_path(enc, **look.lut_args(corr)) if enc in luts.ENC else None)
     if lut:
         f.append(f"lut3d=file='{lut}':interp=tetrahedral")
+    if prof.get('lut') and corr != look.ZERO:
+        kr, kg, kb = (2 ** ((corr['stops'] + corr.get(c, 0)) / 2.4) for c in ('r', 'g', 'b'))
+        f.append(f'colorchannelmixer=rr={kr:.4f}:gg={kg:.4f}:bb={kb:.4f}')
+    cdl = dict(cdl, sat=cdl.get('sat', 1.0) * corr.get('sat', 1.0))
     s, o, p = cdl.get('slope', 1.0), cdl.get('offset', 0.0), cdl.get('power', 1.0)
     if (s, o, p) != (1.0, 0.0, 1.0):
         e = f"clip(pow(clip(val/maxval*{s}+{o}\\,0\\,1)\\,{p})*maxval\\,0\\,maxval)"
@@ -59,6 +65,37 @@ def colour_chain(enc, camera_id, cdl, creative):
 
 def cdl_for(enc, deliv, brand):
     return (deliv.get('grade', {}).get('cdl', {}) or {}).get(enc) or brand['grade']['cdl']
+
+
+def solve_look(p, cdl, work, passes=5):
+    """Per-play correction to the neutral-standard target (look.py): render 3 frames through the colour
+    chain, measure, re-solve; stop when converged. Cached in deliv.grade.look.<file>."""
+    key = os.path.basename(p['file']) + (f"@{p['in']}" if p.get('in') is not None else '')
+    cache = hrstate.get('grade.look', scope='deliv') or {}
+    if key in cache:
+        return cache[key]['correction']
+    dur = float(subprocess.run([FP, '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', p['file']],
+                               capture_output=True, text=True).stdout.strip())
+    a, b = (p['in'], p['out']) if p.get('in') is not None else (0.0, dur)
+    corr, res, hist = dict(look.ZERO), None, []
+    rng = 'full' if p.get('range') == 'pc' else 'tv'
+    for k in range(passes):
+        chain = ','.join([f'scale=540:-2:in_range={rng}:out_range=tv', 'format=rgb48le'] +
+                         colour_chain(p['enc'], p['camera'], cdl, None, corr))
+        frames = []
+        for j, t in enumerate((a + (b - a) * f for f in (0.25, 0.5, 0.75))):
+            out = os.path.join(work, f'look_{k}_{j}.png')
+            subprocess.run([FF, '-nostdin', '-v', 'error', '-y', '-ss', f'{t:.3f}', '-i', p['file'], '-frames:v', '1',
+                            '-vf', chain, out], check=True)
+            frames.append(out)
+        res = look.solve(frames, corr, history=hist); res.pop('frames'); hist.append(res['point'])
+        if res['converged']:
+            break
+        corr = res['correction']
+    cache[key] = {'correction': corr, 'basis': res['basis'], 'measured_luma': res['measured_luma'],
+                  'target_luma': res['target_luma'], 'converged': res['converged']}
+    hrstate.set_('grade.look', cache, scope='deliv')
+    return corr
 
 
 # ---------- pieces ----------
@@ -93,7 +130,9 @@ def intermediate(p, i, OW, OH, deliv, brand, work, kind='play'):
     vf.append(f'scale={OW}:{OH}:force_original_aspect_ratio=increase:flags=lanczos:in_range={rng}:out_range=tv,crop={OW}:{OH}')
     vf.append('format=rgb48le')
     if kind == 'play':
-        vf += colour_chain(p['enc'], p['camera'], cdl_for(p['enc'], deliv, brand), brand['grade'].get('creative_lut'))
+        cdl = cdl_for(p['enc'], deliv, brand)
+        corr = solve_look(p, cdl, work)
+        vf += colour_chain(p['enc'], p['camera'], cdl, brand['grade'].get('creative_lut'), corr)
     vf += [f'fps={RATE}', 'format=yuv422p10le', 'setsar=1']
     args = []
     if p.get('in') is not None:
@@ -268,7 +307,7 @@ def main(a):
     for asp in aspects:
         out, inf = finish_aspect(deliv, asp, brand, music, '--keep' in a)
         files[asp] = out; info[asp] = inf
-        st = {name: gradecheck.stats(Image.open(p)) for name, p in gradecheck.sample_video(out, 8)}
+        st = {name: gradecheck.stats(Image.open(p), p) for name, p in gradecheck.sample_video(out, 8)}
         stats[asp] = st; bad = [k for k, v in st.items() if not v['ok']]
         print(f"{asp}: {out}  {inf['duration']}s  music={'yes' if inf['music'] else 'no'}  "
               f"grade {len(st) - len(bad)}/{len(st)} frames in range"

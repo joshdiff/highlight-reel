@@ -121,7 +121,7 @@
         5,
         8
       ],
-      "teaser": "best goal (else best shot) frozen with the ball in flight",
+      "teaser": "best goal (else best shot) frozen with the ball in flight — OPTIONAL: only when such a scoring play exists and is worth teasing; else null (open on the best play, lower third over it, no repeated finale)",
       "finale": "the same goal in full with celebration"
     },
     "recruiting_tape": {

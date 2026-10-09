@@ -35,7 +35,7 @@ Then **track the on-ball phase densely:** `python3 $S/track.py <shotlist>` follo
 - VFR clips are fine; vcam renders constant frame rate.
 - Very wide AI-camera sources (`camera_type` ai_panoramic) need more keys and a higher base zoom (up to 1.3). The subject is small in a panorama.
 
-## 2. Teaser (cold open)
+## 2. Teaser (cold open — only if `select.teaser` is set)
 Write a second shot list, `<clip>_teaser.json`, with `in`/`out_t` from `select.teaser`. Keys: the player → `"move":"fast"` to the ball, then `"freeze": {"t": <freeze_t>, "dur": <freeze_dur>}` and `"whip_out": true`.
 
 ## 3. Render and check

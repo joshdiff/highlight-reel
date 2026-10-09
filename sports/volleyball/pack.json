@@ -123,7 +123,7 @@
         5,
         9
       ],
-      "teaser": "best kill frozen at the hand-ball contact",
+      "teaser": "best kill frozen at the hand-ball contact — OPTIONAL: only when such a scoring play exists and is worth teasing; else null (open on the best play, lower third over it, no repeated finale)",
       "finale": "the same rally in full with the celebration"
     },
     "recruiting_tape": {

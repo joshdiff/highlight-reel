@@ -19,7 +19,7 @@ Numbers are large on the front AND back, which makes this the most reliable spor
 - **1:** rebound, free throw (except clutch), off the ball
 
 ## Reel structure
-- **Social:** faster than soccer: 6–10 sequences of 2–7s, 30–45s total. Teaser: best dunk/three/and-one, frozen at the top of the shot with the ball in the air. Finale: that play in full, through the reaction (bench, celebration, back-pedal).
+- **Social:** faster than soccer: 6–10 sequences of 2–7s, 30–45s total. Teaser (optional — only for a standout scoring play; otherwise open on the best play): best dunk/three/and-one, frozen at the top of the shot with the ball in the air. Finale: that play in full, through the reaction (bench, celebration, back-pedal).
 - **Recruiting:** coaches expect 3–5 min. Scoring variety (threes, pull-ups, finishes at the rim, free-throw form optional) → playmaking (passes, pick-and-roll reads) → defense (blocks, steals, charges, rotations). Keep each possession whole from the catch.
 - **Scoring reel:** every make, in chronological order: touch → shot → make → reaction.
 

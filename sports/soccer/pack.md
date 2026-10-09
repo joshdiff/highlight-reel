@@ -17,7 +17,7 @@ The number is large on the back and small or illegible on the front. Front-facin
 - **1:** off the ball, a scramble, or too far to read → drop
 
 ## Reel structure
-- **Social:** cold-open teaser of the best goal: shot → ball in flight → FREEZE before the outcome, with the name lower third, whip out. Then 5–8 on-ball sequences of varied length (3–9s), strongest take-ons and shots first. End with the same goal in full: build-up → shot → net → pan back to the scorer → celebration. 40–50s.
+- **Social:** The freeze-frame cold open is OPTIONAL — use it only when there is a goal (or a scoring play) whose outcome is worth holding back. Otherwise open straight on the strongest play with the name lower third over its first ~2s, and don't repeat a play at the end. With a goal: cold-open teaser of it (shot → ball in flight → FREEZE before the outcome, name lower third, whip out). Then 5–8 on-ball sequences of varied length (3–9s), strongest take-ons and shots first. End with the same goal in full: build-up → shot → net → pan back to the scorer → celebration. 40–50s.
 - **Recruiting:** goals with build-up → take-ons/skills → passing → defending, 2–3 min.
 - **Scoring reel:** every goal (and assist for a player), in chronological order, each as build-up → finish → celebration.
 

@@ -22,7 +22,7 @@ Mixed sources: 59.94/29.97 conform cleanly; 24/25 fps clips judder on 29.97, so 
 ## Steps
 1. **Per aspect**, create `<deliv id>_<aspect>` (e.g. `alex-social_9x16`) in `_SEQUENCES`. Then `timeline` → `set_setting` useCustomSettings=1 and timelineResolutionWidth/Height from the aspect (9:16 1080×1920, 1:1 1080×1080, 4:5 1080×1350, 16:9 1920×1080). Read back the resolution and timelineFrameRate (29.97).
 2. **Content in `select` order:**
-   - reframed aspects: the teaser reframe → each sequence's reframe (finale last);
+   - reframed aspects: the teaser reframe (if any) → each sequence's reframe (finale last);
    - 16:9 from 16:9 footage: the originals trimmed to the `select` windows.
 
    The teaser carries its own whip-out into the first play (a hard cut there).

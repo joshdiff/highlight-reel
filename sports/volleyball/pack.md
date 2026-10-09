@@ -18,7 +18,7 @@ Numbers are on the front and back. The **libero wears a different colour** from 
 - **1:** serve receive (recruiting only), off the ball
 
 ## Reel structure
-- **Social:** 5–9 rallies of 3–8s, 30–45s total. Teaser: best kill, frozen at the hand–ball contact. Finale: that rally in full, through the huddle.
+- **Social:** 5–9 rallies of 3–8s, 30–45s total. Teaser (optional — only for a standout kill; otherwise open on the best rally): best kill, frozen at the hand–ball contact. Finale: that rally in full, through the huddle.
 - **Recruiting:** 3–5 min, grouped by skill, primary position skill first (hitters: attacking; setters: setting; liberos/DS: passing and defense). Then serving, blocking, and a few full rallies.
 - **Scoring reel:** every point won by the player, in chronological order.
 

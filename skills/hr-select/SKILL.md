@@ -18,10 +18,10 @@ $ARGUMENTS
 ## Rules
 - **Pool:** clips with score ≥2 (≥3 preferred). Never a clip the client dropped before (feedback with a matching clip or kind).
 - **social_reel:**
-  - **Teaser:** the best scoring play. **Finale:** that play in full.
+  - **Teaser (optional):** only when the pool has a goal/scoring play worth holding back — then the best one, and **finale:** that play in full. Otherwise set `"teaser": null`, open on the strongest play (the lower third goes over its first ~2s) and end on a strong play, without repeating one. A videographer said the freeze open shouldn't be on every reel.
   - **Middle:** the pack's `n_seq` sequences of `seq_s` length, strongest first, varied lengths, no two near-identical beats back to back.
   - **(team):** every scoring play is in (the best one as teaser + finale).
-  - **Length:** `target_s` including the teaser (~2–2.5s).
+  - **Length:** `target_s` including the teaser if there is one (~2–2.5s).
 - **recruiting_tape:** the pack's `order` groups; whole possessions/rallies; `target_s`.
 - **scoring_reel:** every play whose event is in the pack's `events` list for it, chronological.
 - **season_reel:** pool = `games[].best_clips` from the player profile for the season. Each entry has `game_dir`; read that game's `targets/*/find.json` for windows. Pick the best across games, balance across games, and sequence by quality. Games whose media is offline (drive unmounted) are skipped and noted.
@@ -43,7 +43,7 @@ Clamp to the clip's segment (`media.clips.<clip>.in/out`). Teaser window: ~0.6s 
 For a season reel, add `"game": "<game id>"` to each item. Run `hrstate.py deliv set select "$(cat select.json)"`, then `hrstate.py deliv done select "<N plays, total s>"`.
 
 ## Done when
-`total_s` is within the pack's target; the finale is the teaser's play in full (social); no two adjacent sequences share the same beat; every window is inside its segment; no client-dropped clip is included.
+`total_s` is within the pack's target; with a teaser, the finale is its play in full (social); no two adjacent sequences share the same beat; every window is inside its segment; no client-dropped clip is included.
 
 ## Known gaps
 - Ordering is judgement-only. Music-beat alignment of cuts is not implemented.

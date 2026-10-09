@@ -5,9 +5,9 @@ Learned by comparing an automated reel with a hand-cut one. The skill must reach
 ## Craft rules (all sports)
 - **On the ball, making something happen.** Player reels show the featured player driving the play. Team reels show the team's best moments with screen time spread across players. No scrambles the player isn't driving, and no distant shots where they're tiny.
 - **Structure:**
-  1. Cold-open teaser: the best scoring play, frozen before the outcome, with the name lower third, whip out.
+  1. Open strong, with the name lower third. A freeze-frame cold-open teaser (best scoring play frozen before the outcome, whip out) is optional — only when there's a goal/score worth holding back; otherwise open straight on the strongest play.
   2. Varied-length sequences, strongest first.
-  3. The teaser play in full at the end, through the reaction/celebration.
+  3. If there was a teaser, that play in full at the end, through the reaction/celebration.
 - **The frame is directed.** It follows the player while they have the ball, switches to the ball the instant they shoot/pass/attack, holds on the outcome, then pans back to the scorer and stays through the celebration. It does not punch in: zoom stays at 1.0.
 - **Consistent output.** Every play and every game lands on the same look: a correction is solved per clip (look.py) against a fixed neutral-standard target anchored on the playing surface, so sun, cloud and camera differences don't show. No fixed creative grade by default.
 - **Natural grade — it should look real.** No clipped sky or gym lights, shirts their true colour (a pale kit stays pale), grass green but not neon. Measured: mean luma 0.36–0.45, under 0.5% of pixels at extreme saturation ("vivid"), clipped <1%. Never push saturation to hit a number; an overcast day looks overcast.
@@ -22,7 +22,7 @@ Deliverable types (timings per sport in `pack.json → deliverables`):
 
 | type | default aspect | what |
 |---|---|---|
-| social_reel | 9:16 | teaser → sequences → full best play |
+| social_reel | 9:16 | [teaser →] sequences [→ full teaser play] |
 | recruiting_tape | 16:9 | grouped by skill for coaches |
 | scoring_reel (`goals_reel` alias) | 16:9 | every scoring play, chronological |
 | season_reel | 9:16 | best clips across a player's games (from their profile) |

@@ -18,7 +18,7 @@ $ARGUMENTS
      1. the camera profile's official `lut`, else the built-in transform (`luts.py`: Canon Log 3, S-Log3, V-Log, Apple Log, HLG, PQ; Rec.709 untouched);
      2. then the CDL: `deliv grade.cdl.<encoding>`, else the brand's, else slope 1.0 / power 1.02 / saturation 1.3;
      3. then the brand's creative LUT.
-   - **Brand:** intro/outro bumpers, a lower third over the teaser (text from the player profile, style from the brand), and a watermark.
+   - **Brand:** intro/outro bumpers, a lower third over the teaser, or over the opening play when there's no teaser (text from the player profile, style from the brand), and a watermark.
    - **Audio:**
      - music from the brand's folder, chosen per deliverable. It's on for social reels and off for recruiting/scoring reels unless set (`hrstate.py deliv set music <file|none>`);
      - ducked under the game audio;

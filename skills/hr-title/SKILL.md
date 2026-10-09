@@ -21,8 +21,8 @@ $ARGUMENTS
 1. In `GRAPHICS`, create `TITLE_<deliv id>_<aspect>` at that aspect's resolution; `insert_fusion_title` "Text+".
 2. `timeline` → `set_title_text` (pass `timeline_item_id`) with the two lines.
 3. `fusion_comp` → `set_input` on `Template`: Center [0.5, 0.25], Size ~0.07 (or the brand's values). This gives a compact bar in the lower third, clear of the action.
-4. `timeline` → `get_media_pool_item`. Back on the delivery timeline, `add_track` video, then `append_to_timeline` that item on the new track, record_frame 0, spanning the teaser (end frame exclusive).
-5. Verify with `timeline_frame capture` mid-teaser; readback alone is not proof. The bar must be readable and must not cover the player.
+4. `timeline` → `get_media_pool_item`. Back on the delivery timeline, `add_track` video, then `append_to_timeline` that item on the new track, record_frame 0, spanning the teaser (end frame exclusive) — or, with no teaser, the first ~2.3s (70 frames) of the opening play.
+5. Verify with `timeline_frame capture` mid-title; readback alone is not proof. The bar must be readable and must not cover the player.
 6. `hrstate.py deliv set title '{"text": ["...", "..."], "items": {"9:16": "..."}}'`; `hrstate.py deliv done title`.
 
 ## Known gaps

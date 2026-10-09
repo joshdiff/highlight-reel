@@ -140,7 +140,7 @@
         6,
         10
       ],
-      "teaser": "best dunk / three / and-one frozen at the top of the shot",
+      "teaser": "best dunk / three / and-one frozen at the top of the shot — OPTIONAL: only when such a scoring play exists and is worth teasing; else null (open on the best play, lower third over it, no repeated finale)",
       "finale": "best scoring play in full with the reaction"
     },
     "recruiting_tape": {

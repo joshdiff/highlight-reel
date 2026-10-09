@@ -12,7 +12,7 @@ $ARGUMENTS
 **Scope: deliverable.** Requires `finish` done (ffmpeg path) or `grade` + `title` done (Resolve path). Final paths: `python3 $S/naming.py` prints one path per aspect, from the client's template (never overwrites; adds _v2, _v3).
 
 ## 1. Produce the files
-- **ffmpeg path:** `hr-finish` already wrote `deliv.finish.files {aspect: path}`. Move or copy each to its naming.py path.
+- **ffmpeg path:** `hr-finish` already wrote `deliv.finish.files {aspect: path}`. MOVE each to its naming.py path (no second copy left in the work area).
 - **Resolve path**, per aspect timeline:
   1. `render`: `set_format_and_codec` mp4/H264 → `set_mode` 1;
   2. `set_settings` one at a time: TargetDir and CustomName (from the naming.py path), ExportVideo, ExportAudio, FormatWidth, FormatHeight, FrameRate 29.97, VideoQuality;
@@ -45,4 +45,4 @@ Also add the report's flags to `deliv.flags` so `hrstate.py status` shows them.
 - Never write any of this into the repo or the skill files.
 
 ## Done when
-Every aspect's file is at its naming.py path, verified, and passes gradecheck. The report has been given, and learn has run.
+Every aspect's file is at its naming.py path, verified, and passes gradecheck. The report has been given, and learn has run — the library now holds everything this game taught, so the work area can be deleted when the session ends (/highlight-reel does `hrstate.py clean --session`).

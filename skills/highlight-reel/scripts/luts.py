@@ -106,7 +106,7 @@ def cube_path(enc, exposure=1.0, out=None, gains=(1.0, 1.0, 1.0)):
     if enc not in ENC:
         sys.exit(f'luts: no built-in transform for {enc!r} (have {list(ENC)}); set an official LUT on the camera profile')
     tag = '' if tuple(gains) == (1.0, 1.0, 1.0) else '_g' + '-'.join(f'{g:.3f}' for g in gains)
-    out = out or os.path.join(hrstate.HOME, 'luts', f'{enc}_x{exposure:.4g}{tag}.cube')
+    out = out or os.path.join(hrstate.root(), 'tmp', 'luts', f'{enc}_x{exposure:.4g}{tag}.cube')   # scratch
     if not os.path.exists(out):
         os.makedirs(os.path.dirname(out), exist_ok=True)
         data = build(enc, exposure, gains)

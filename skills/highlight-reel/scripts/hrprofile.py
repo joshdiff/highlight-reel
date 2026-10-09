@@ -30,7 +30,7 @@ CLI (python3 hrprofile.py ...):
   output PLAYER GAME FILE...            record delivered files in the player's game history
   rm player|team ID
 """
-import json, os, re, shutil, subprocess, sys, tempfile, time
+import json, os, re, shutil, subprocess, sys, time
 from collections import Counter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hrstate
@@ -133,7 +133,7 @@ def last_game(p):
 def _extract(src, t, box, out):
     """Crop a reference from the source at full resolution (box in source pixels), with headroom."""
     from PIL import Image, ImageOps
-    tmp = tempfile.mktemp(suffix='.png')
+    tmp = os.path.join(hrstate.tmp('ref'), 'f.png')
     subprocess.run([hrstate.tool('ffmpeg'), '-nostdin', '-v', 'error', '-y', '-ss', f'{t:.3f}', '-i', src,
                     '-frames:v', '1', tmp], check=True)
     im = Image.open(tmp)
@@ -141,7 +141,7 @@ def _extract(src, t, box, out):
     x0, x1 = max(0, x0 - w * 0.25), min(im.width, x1 + w * 0.25)
     y0, y1 = max(0, y0 - h * 0.35), min(im.height, y1 + h * 0.15)
     c = ImageOps.autocontrast(im.crop((int(x0), int(y0), int(x1), int(y1))).convert('RGB'), cutoff=1)
-    c.thumbnail((360, 480)); c.save(out, quality=90); os.remove(tmp)
+    c.thumbnail((360, 480)); c.save(out, quality=90); shutil.rmtree(os.path.dirname(tmp), ignore_errors=True)
     return out
 
 
@@ -285,12 +285,13 @@ def learn(pid, game, target):
     best = {c: v.get('beat') or v.get('event') for c, v in conf.items() if (v.get('score') or 0) >= 3}
     entry = {'game': gid, 'date': date, 'event': g.get('event'), 'team_id': team.get('team_id'),
              'sport': g.get('sport'), 'confirmed': len(conf), 'best_clips': best,
-             'game_dir': gdir, 'outputs': []}
-    same = [x for x in p['games'] if x.get('game') == gid or (x.get('date') == date and not x.get('game_dir')
-            and (x.get('event') or '').lower() in (g.get('event') or '').lower())]
+             'sources': g.get('sources', []), 'outputs': []}   # originals, not the work dir (deleted at clean)
+    same = [x for x in p['games'] if x.get('game') == gid or (x.get('date') == date and not x.get('sources')
+            and not x.get('game_dir') and (x.get('event') or '').lower() in (g.get('event') or '').lower())]
     for old in same:     # merge earlier records of this game (re-learn, or a pre-v1 entry)
         entry['outputs'] = sorted(set(entry['outputs']) | set(old.get('outputs', [])))
         entry['best_clips'] = {**old.get('best_clips', {}), **entry['best_clips']}
+        entry['sources'] = entry['sources'] or old.get('sources', [])
         p['games'].remove(old)
     p['games'].append(entry); p['games'].sort(key=lambda x: x.get('date') or '')
     if g.get('sport') and not p.get('sport'):

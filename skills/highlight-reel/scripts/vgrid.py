@@ -1,11 +1,11 @@
 """Usage: vgrid.py SRC.MP4|CLIP_NAME START END OUT.jpg [fps=5]   (OUT relative → workspace grids/)
 5 fps review grid with an x-position ruler (0-100 of the SOURCE width; portrait sources are letterboxed) and team-colour player boxes, for writing the shot list."""
-import sys,os,subprocess,glob,cv2,tempfile
+import sys,os,subprocess,glob,cv2,shutil
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); from detect import team_blobs
 import hrstate
 src,a,b,out=sys.argv[1],float(sys.argv[2]),float(sys.argv[3]),sys.argv[4]; out=out if os.path.isabs(out) else os.path.join(hrstate.sub('grids'),out); fps=float(sys.argv[5]) if len(sys.argv)>5 else 5
 if not os.path.exists(src): src=hrstate.get(f'media.clips.{src}.path') or sys.exit(f'unknown clip {sys.argv[1]}')
-d=tempfile.mkdtemp(); RNG=hrstate.team_hsv(os.path.splitext(os.path.basename(src))[0])
+d=hrstate.tmp('vgrid'); RNG=hrstate.team_hsv(os.path.splitext(os.path.basename(src))[0])
 import json
 _v=json.loads(subprocess.run([hrstate.tool('ffprobe'),'-v','error','-select_streams','v:0','-show_entries','stream=width,height','-of','json',src],capture_output=True,text=True).stdout)['streams'][0]; W,H=int(_v['width']),int(_v['height'])
 IW=960 if W/H>=960/540 else round(540*W/H); X0=(960-IW)//2   # image area inside the padded tile
@@ -19,4 +19,4 @@ for i,f in enumerate(sorted(glob.glob(d+'/g_*.jpg'))):
     cv2.putText(vis,f'{a+i/fps:.1f}s',(820,525),0,0.9,(0,255,0),2); tiles.append(cv2.resize(vis,(480,270)))
 while len(tiles)%4: tiles.append(tiles[0]*0)
 cv2.imwrite(out,cv2.vconcat([cv2.hconcat(tiles[i:i+4]) for i in range(0,len(tiles),4)]),[cv2.IMWRITE_JPEG_QUALITY,85])
-print(out,len(tiles))
+shutil.rmtree(d,ignore_errors=True); print(out,len(tiles))

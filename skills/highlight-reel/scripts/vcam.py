@@ -1,11 +1,18 @@
-"""Virtual camera: render a 9:16 reframe of a 16:9 clip from a shot list.
+"""Virtual camera: the operator-style framing path of a play, from a shot list.
 
-Usage: python3 vcam.py shotlist.json
+Usage: python3 vcam.py shotlist.json            render the reframe (ffmpeg path; scratch, <deliverable>/reframes/)
+       python3 vcam.py shotlist.json --check    framing check only: 4 fps contact sheet into <deliverable>/checks/
+                                                (renders a small preview in scratch and deletes it)
+       python3 vcam.py shotlist.json --keys     print the Resolve keyframes (Pan/Tilt/Zoom) it would get
+
+The same path drives both routes: the Resolve path never renders — timeline_export.py turns plan() into
+Inspector Pan/Tilt/Zoom keyframes on the ORIGINAL clip, trimmed in the timeline; the ffmpeg path renders
+it here into <deliverable>/reframes/ (scratch, deleted when the session is cleaned).
 
 shotlist.json:
 {
   "src": "R7__1630",                        # clip/segment id (looked up in game.json) or a path
-  "out": "/path/R7__1630_vc.mov",           # optional; default <deliverable>/reframed/<shotlist name>_vc.mov
+  "out": "/path/R7__1630_vc.mov",           # optional; default <deliverable>/reframes/<shotlist name>_vc.mov
   "in": 2.6, "out_t": 10.8,                # source seconds
   "keys": [                                 # x: 0-100 across source width (vgrid ruler)
     {"t": 2.6, "x": 33, "zoom": 1.0, "subject": "player", "event": "possession"},
@@ -26,7 +33,7 @@ only). Zoom is smoothed over 1s. move "fast" = whip to that key (shot/pass); oth
 follows like an operator (dead zone, eased spring, speed limits — see follow()), not like the keys.
 Output: ProRes 422 HQ 10-bit, Log preserved (no colour change), audio PCM.
 """
-import json, sys, subprocess, os, tempfile
+import json, sys, subprocess, os, shutil
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hrstate
@@ -107,13 +114,13 @@ def follow(xs, whip, win, fps, p):
     return cam
 
 
-def main(spec_path):
+def plan(spec_path):
+    """The framing path, no rendering: per source frame from t0 (in − handle) to t1 (out + handle), the
+    crop window (cx, cy = centre, cw × ch, source pixels; always inside the frame) of the output aspect."""
     s = json.load(open(spec_path))
+    s['clip'] = s['src']
     if not os.path.exists(s['src']):   # a clip/segment id of the current game
         s['src'] = hrstate.get(f"media.clips.{s['src']}.path") or sys.exit(f"unknown clip {s['src']}")
-    if not s.get('out'):
-        name = os.path.splitext(os.path.basename(spec_path))[0] + '_vc.mov'
-        s['out'] = os.path.join(hrstate.dsub('reframed'), name)
     W, H, fps = probe(s['src'])
     dur = float(subprocess.run([FP, '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', s['src']],
                                capture_output=True, text=True).stdout.strip() or 1e9)
@@ -122,8 +129,9 @@ def main(spec_path):
     if s.get('freeze'):
         h_out = 0.0                                    # a freeze is its own tail
     t0, t1 = s['in'] - h_in, s['out_t'] + h_out
+    if s.get('freeze'):
+        t1 = max(t1, s['freeze']['t'])
     ts, xs, ys, zs, whip = path(s['keys'], t0, t1, fps, s.get('y', 50))
-    cmds = []
     # Output aspect (9:16 default). The zoom-1.0 window is the largest window of that aspect inside the
     # source, so portrait phone clips, 4K and HD all work. Zoom is capped by how far the crop can shrink
     # before the upscale gets soft: crop height may go down to ~0.75 of the output height (1.15–2.0).
@@ -140,14 +148,72 @@ def main(spec_path):
         win = 100.0 * (base_h / zs) * ar / W
         xs = follow(xs, whip, win, fps, p)
         ys = follow(ys, whip, 100.0 * (base_h / zs) / H, fps, dict(p, deadzone=0.25, vmax=20.0))
-    for i, (t, x, yv, z) in enumerate(zip(ts, xs, ys, zs)):
-        ch = int(round(base_h / z / 2) * 2)
-        cw = int(round(ch * ar / 2) * 2)
-        cx = min(max(x / 100.0 * W - cw / 2, 0), W - cw)  # clamp: never show black edges
-        cy = min(max(yv / 100.0 * H - ch / 2, 0), H - ch)
-        rt = i / fps
-        cmds.append(f'{rt:.4f} crop w {cw}, crop h {ch}, crop x {int(cx)}, crop y {int(cy)};')
-    tmp = tempfile.mkdtemp()
+    wins = []
+    for x, yv, z in zip(xs, ys, zs):
+        ch = base_h / z; cw = ch * ar
+        cx = min(max(x / 100.0 * W, cw / 2), W - cw / 2)   # clamp: never show black edges
+        cy = min(max(yv / 100.0 * H, ch / 2), H - ch / 2)
+        wins.append((cx, cy, cw, ch))
+    return {'spec': s, 'src': s['src'], 'W': W, 'H': H, 'fps': fps, 't0': t0, 't1': t1, 'h_in': h_in,
+            'h_out': h_out, 'ts': ts, 'wins': wins, 'whip': whip, 'out_size': (OW, OH), 'ar': ar}
+
+
+def resolve_keys(pl, tl_size=None, tol_px=3.0):
+    """plan() → Inspector keyframes for the original clip in a timeline of tl_size (default the output size),
+    with Resolve's default "scale entire image to fit": [{t (source s), pan, tilt (timeline px), zoom}].
+    Pan/Tilt move the window centre to the frame centre; zoom is relative to fit. The per-frame path is
+    reduced to the fewest keys that stay within tol_px of it (linear between keys), so the clip carries a
+    handful of editable keys, not one per frame; whip frames are always kept."""
+    TW, TH = tl_size or pl['out_size']; W, H = pl['W'], pl['H']
+    fit = min(TW / W, TH / H)
+    rows = []
+    for t, (cx, cy, cw, ch), wh in zip(pl['ts'], pl['wins'], pl['whip']):
+        S = TH / ch if cw / ch <= TW / TH else TW / cw          # source px → timeline px for this window
+        rows.append((float(t), -(cx - W / 2) * S, (cy - H / 2) * S, S / fit, bool(wh)))
+    if not rows:
+        return []
+    keep = _rdp(rows, 0, len(rows) - 1, tol_px, {0, len(rows) - 1})
+    keep |= {i for i, r in enumerate(rows) if r[4]} | {i + 1 for i, r in enumerate(rows[:-1]) if r[4]}
+    return [{'t': round(rows[i][0], 4), 'pan': round(rows[i][1], 2), 'tilt': round(rows[i][2], 2),
+             'zoom': round(rows[i][3], 4)} for i in sorted(keep)]
+
+
+def _rdp(rows, a, b, tol, keep):
+    """Ramer–Douglas–Peucker over (pan, tilt, zoom·1000) against time; iterative to avoid deep recursion."""
+    stack = [(a, b)]
+    while stack:
+        a, b = stack.pop()
+        if b - a < 2:
+            continue
+        ta, tb = rows[a][0], rows[b][0]; worst, wi = 0.0, None
+        for i in range(a + 1, b):
+            u = (rows[i][0] - ta) / (tb - ta) if tb > ta else 0
+            e = max(abs(rows[i][c] - (rows[a][c] + (rows[b][c] - rows[a][c]) * u)) * (1000 if c == 3 else 1)
+                    for c in (1, 2, 3))
+            if e > worst:
+                worst, wi = e, i
+        if worst > tol:
+            keep.add(wi); stack += [(a, wi), (wi, b)]
+    return keep
+
+
+def main(spec_path, check=False):
+    pl = plan(spec_path); s = pl['spec']; W, H, fps = pl['W'], pl['H'], pl['fps']
+    t0, t1, h_in, h_out, ts = pl['t0'], pl['t1'], pl['h_in'], pl['h_out'], pl['ts']
+    stem = os.path.splitext(os.path.basename(spec_path))[0]
+    tmp = hrstate.tmp('vcam')
+    if check:
+        s['out'] = os.path.join(tmp, stem + '_preview.mp4')
+    elif not s.get('out'):
+        s['out'] = os.path.join(hrstate.dsub('reframes'), stem + '_vc.mov')
+    OW, OH = pl['out_size']
+    if check:
+        OW, OH = OW // 3 // 2 * 2, OH // 3 // 2 * 2
+    cmds = []
+    for i, (cx, cy, cw, ch) in enumerate(pl['wins']):
+        ch = int(round(ch / 2) * 2); cw = int(round(cw / 2) * 2)
+        x0 = min(max(cx - cw / 2, 0), W - cw); y0 = min(max(cy - ch / 2, 0), H - ch)
+        cmds.append(f'{i / fps:.4f} crop w {cw}, crop h {ch}, crop x {int(x0)}, crop y {int(y0)};')
     cf = os.path.join(tmp, 'cmds.txt'); open(cf, 'w').write('\n'.join(cmds))
     first = cmds[0].split(' ', 1)[1]
     w0 = int(first.split('crop w ')[1].split(',')[0]); h0 = int(first.split('crop h ')[1].split(',')[0])
@@ -165,14 +231,29 @@ def main(spec_path):
         st = total - 0.2
         vf.append(f"gblur=sigma=40:sigmaV=0.01:enable='gte(t,{st:.3f})'")
     os.makedirs(os.path.dirname(s['out']), exist_ok=True)
+    codec = (['-c:v', 'libx264', '-crf', '26', '-preset', 'veryfast', '-pix_fmt', 'yuv420p'] if check else
+             ['-c:v', 'prores_ks', '-profile:v', '3', '-pix_fmt', 'yuv422p10le'])
     cmd = [FF, '-nostdin', '-v', 'error', '-y', '-ss', str(t0), '-t', str(t1 - t0), '-i', s['src'],
-           '-vf', ','.join(vf), '-c:v', 'prores_ks', '-profile:v', '3', '-pix_fmt', 'yuv422p10le',
-           '-c:a', 'pcm_s16le', s['out']]
+           '-vf', ','.join(vf)] + codec + ['-c:a', 'pcm_s16le' if not check else 'aac', s['out']]
     if fr:
         cmd[cmd.index('-c:a'):cmd.index('-c:a')] = ['-af', f"apad,atrim=duration={fr['t'] - t0 + fr['dur']:.4f}"]
     subprocess.run(cmd, check=True)
+    if check:   # the sheet is the only thing kept
+        rows = max(1, -(-int((t1 - t0) * 4) // 8))
+        sheet = os.path.join(hrstate.dsub('checks'), stem + '.jpg')
+        subprocess.run([FF, '-nostdin', '-v', 'error', '-y', '-i', s['out'], '-vf',
+                        f'fps=4,scale=270:-2,tile=8x{rows}', '-frames:v', '1', sheet], check=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+        print(sheet, f'{len(ts)} frames @ {fps:.2f}', f'{len(resolve_keys(pl))} Resolve keys')
+        return
+    shutil.rmtree(tmp, ignore_errors=True)
     print(s['out'], f'{len(ts)} frames @ {fps:.2f}', json.dumps({'handle_in_s': round(h_in, 4), 'handle_out_s': round(h_out, 4)}))
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    if '--keys' in sys.argv:
+        pl = plan(sys.argv[1]); ks = resolve_keys(pl)
+        print(json.dumps({'src': pl['src'], 't0': pl['t0'], 't1': pl['t1'], 'frames': len(pl['ts']),
+                          'keys': len(ks), 'first': ks[:3], 'last': ks[-2:]}, indent=1))
+    else:
+        main(sys.argv[1], check='--check' in sys.argv)

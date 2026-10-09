@@ -27,18 +27,18 @@ Deliverable types (timings per sport in `pack.json → deliverables`):
 | scoring_reel (`goals_reel` alias) | 16:9 | every scoring play, chronological |
 | season_reel | 9:16 | best clips across a player's games (from their profile) |
 
-A deliverable can request several aspects (9:16, 1:1, 4:5, 16:9); each gets its own render.
+A deliverable can request several aspects (9:16, 1:1, 4:5, 16:9); each gets its own framing (Resolve: its own keyframed timeline; ffmpeg: its own render).
 
 ## Data layers (all local; nothing personal goes in the repo)
 - **Machine:** `hrstate.py config` (output folder, media root, default grade, ffmpeg).
 - **Library:** `hrprofile.py` (players, teams), `cameras.py` (cameras). Players learn after every game; see `/hr-library`.
-- **Work:** `<output>/_hr/` holding sessions, games (shared survey), targets (find per player/team) and deliverables (select → export). `python3 $S/hrstate.py status` shows the board.
+- **Work:** `<output>/_hr/` holding sessions, games (shared survey), targets (find per player/team) and deliverables (select → export). Scratch only: `hrstate.py clean --session` deletes it at the end of the session. Scripts put temporary files in `hrstate.tmp()` (inside the work area), never the system /tmp. `python3 $S/hrstate.py status` shows the board.
 
 ## Environment facts
 - Scripts: the highlight-reel skill's `scripts/` folder (`$S`, located by the `find` one-liner at the top of each stage). Run python WITHOUT `-I` (cv2/scipy live in user site-packages). ffmpeg/ffprobe via `hrstate.tool()`.
 - Use python, never `bc`, for timestamp maths (bc drops the leading zero and ffmpeg rejects ".29").
 - A game can mix cameras and footage types. Camera, encoding, orientation, fps and VFR are per clip in `media.clips`; never assume one camera per game.
 - Times in find/select/shot lists are SOURCE-FILE seconds (absolute in the file), even for segments of long files.
-- Resolve 21.1 via the davinci-resolve MCP: Pan keyframes are unavailable (`add_keyframe` → "'NoneType' object is not callable"), which is why reframing is done by `vcam.py`. Titles need the nested-timeline route (hr-title).
+- Resolve 21.1: the scripting API can't write transform keyframes (`add_keyframe` → "'NoneType' object is not callable"), so framing reaches Resolve as an imported FCPXML timeline: originals trimmed in place with Inspector Position/Zoom keyframes (hr-assemble). Import with `importSourceClips` true — false leaves every item offline. Never render or copy footage for Resolve. Titles need the nested-timeline route (hr-title).
 - If Resolve reports "Full resolution media not found" / a clip reads Offline although the file exists (e.g. renamed on disk after import), `media_pool_item` → `replace_clip` with the current path relinks it in place; the timeline items keep their trims and grades. Re-set its Input Color Space after (replace resets it to Project).
 - Resolve frame captures/renders can start failing on EVERY clip with "Error decoding full resolution media for <clip>" after many captures and timeline switches, although the files decode fine with ffmpeg. Save the project, load another project, then load it back (loading the open project is a no-op) and set the delivery timeline current; captures then work.

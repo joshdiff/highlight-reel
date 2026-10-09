@@ -3,9 +3,15 @@
 Layout (under <output_folder>/_hr/, output_folder from the machine config):
   sessions/<name>/session.json        a day's queue: games + deliverables, priority
   games/<game id>/game.json           sport, sources, media.clips (segments), teams, calibration, stages
-  games/<game id>/{frames,frames_4k,src2fps,sheets,grids,checks}/          survey output (shared)
+  games/<game id>/{frames,frames_4k,src2fps,sheets,grids,checks,tmp}/      survey output (shared)
   games/<game id>/targets/<id>/find.json                                   a player or team to find
-  games/<game id>/deliverables/<id>/deliv.json + {shotlists,reframed,checks}/   one output reel
+  games/<game id>/deliverables/<id>/deliv.json + {shotlists,reframes,checks}/   one output reel
+  tmp/luts/                           cached .cube transforms (ffmpeg path)
+
+EVERYTHING under _hr/ is scratch for the session: the source footage is never copied (the Resolve path trims
+the originals in the timeline and reframes them with Inspector keyframes), and `clean --session` deletes the
+session's games, the session and _hr/tmp once every deliverable is exported. What carries over to later
+projects lives in $HR_HOME: the library (players learn at export), config, and nothing else.
 
 Local, never in the repo ($HR_HOME, default ~/.hr_work):
   config.json  machine settings (hrstate.py config)      library/  profiles (hrprofile.py, cameras.py)
@@ -26,7 +32,9 @@ CLI (python3 hrstate.py ...):
   status                      next (the next unfinished unit of the current session; makes it current)
   [SCOPE] get KEY | set KEY VALUE | merge KEY FILE | done STAGE [NOTE] | reset STAGE | path [SUB]
       SCOPE = game (default) | target | deliv | session, optionally SCOPE:ID (e.g. deliv:alex-social)
-  clean [GAME] [--force]      delete survey frames + reframes once every deliverable is exported
+  clean --session [NAME] [--force]   end of session: delete its games' work dirs, the session and _hr/tmp
+                              (refuses while a deliverable isn't exported, unless --force)
+  clean GAME [--force]        delete one game's work dir (same check)
 """
 import json, os, re, shutil, sys, time, tempfile
 
@@ -41,7 +49,7 @@ TARGET_STAGES = ['find']
 DELIV_STAGES = {'ffmpeg': ['select', 'direct', 'finish', 'export'],
                 'resolve': ['select', 'direct', 'project', 'assemble', 'grade', 'title', 'export']}
 GAME_SUBDIRS = ['frames', 'frames_4k', 'src2fps', 'sheets', 'grids', 'checks', 'targets', 'deliverables']
-DELIV_SUBDIRS = ['shotlists', 'reframed', 'checks']
+DELIV_SUBDIRS = ['shotlists', 'reframes', 'checks']
 FILES = {'game': 'game.json', 'target': 'find.json', 'deliv': 'deliv.json', 'session': 'session.json'}
 
 
@@ -152,8 +160,19 @@ def sub(name, gid=None):
 
 
 def dsub(name, did=None):
-    """Deliverable-level working dir (shotlists, reframed, checks), created on demand."""
+    """Deliverable-level working dir (shotlists, reframes, checks), created on demand."""
     p = os.path.join(deliv_dir(did), name); os.makedirs(p, exist_ok=True); return p
+
+
+def tmp(prefix='t'):
+    """A fresh scratch dir inside the work area (the current game's tmp/, else _hr/tmp/), never the system
+    /tmp: everything here goes when the session is cleaned. Callers may delete it sooner."""
+    try:
+        base = os.path.join(game_dir(), 'tmp')
+    except SystemExit:
+        base = os.path.join(root(), 'tmp')
+    os.makedirs(base, exist_ok=True)
+    return tempfile.mkdtemp(prefix=prefix + '_', dir=base)
 
 
 # ---------- generic scoped state ----------
@@ -413,21 +432,63 @@ def calibrated(team, enc):
 
 
 # ---------- cleanup ----------
-def clean(gid=None, force=False):
-    g = game_dir(gid); dd = os.path.join(g, 'deliverables')
+def _size(p):
+    return sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk(p) for f in fs) if os.path.isdir(p) else 0
+
+
+def _pending(g):
+    dd = os.path.join(g, 'deliverables')
     delivs = [x for x in os.listdir(dd) if os.path.isdir(os.path.join(dd, x))] if os.path.isdir(dd) else []
-    pending = [d for d in delivs if 'export' not in _stages_done(os.path.join(dd, d), 'deliv.json')]
+    return [d for d in delivs if 'export' not in _stages_done(os.path.join(dd, d), 'deliv.json')]
+
+
+def _drop(paths):
+    """Delete work dirs and forget them in the registry and the current pointers."""
+    freed = 0; reg = _read(REGISTRY, {}); cur = current()
+    for p in paths:
+        if os.path.isdir(p):
+            freed += _size(p); shutil.rmtree(p)
+        for kind in ('games', 'sessions'):
+            reg[kind] = {k: v for k, v in reg.get(kind, {}).items() if v != p}
+        cur = {k: (None if v == p else v) for k, v in cur.items()}
+    if not cur.get('game'):
+        cur.update(target=None, deliv=None)
+    _write(REGISTRY, reg); _write(CURRENT, cur)
+    return freed
+
+
+def clean(gid=None, force=False):
+    """Delete one game's whole work dir (survey frames, shot lists, previews, state) once its deliverables
+    are exported. The library already holds what the game taught (hr-export runs hrprofile learn)."""
+    g = game_dir(gid); pending = _pending(g)
     if pending and not force:
         sys.exit(f'not cleaning: deliverables not exported yet: {pending} (use --force)')
-    freed = 0
-    for p in [os.path.join(g, x) for x in ('frames', 'frames_4k', 'src2fps', 'grids')] + \
-             [os.path.join(dd, d, 'reframed') for d in delivs]:
-        if os.path.isdir(p):
-            for r, _, fs in os.walk(p):
-                freed += sum(os.path.getsize(os.path.join(r, f)) for f in fs)
-            shutil.rmtree(p)
-    set_('cleaned', _now(), sid=g)
-    print(f'freed {freed / 1e9:.2f} GB in {os.path.basename(g)}')
+    print(f'freed {_drop([g]) / 1e9:.2f} GB: {os.path.basename(g)}')
+
+
+def clean_session(name=None, force=False):
+    """End of session: delete every game of the session, the session itself and _hr/tmp. A game that another
+    (unfinished) session still uses is kept. Leaves _hr/ itself only if something else is still in it."""
+    if name:
+        _set_current(session=_read(REGISTRY, {}).get('sessions', {}).get(name) or name)
+    sd = session_dir(); s = load('session')
+    pending = {os.path.basename(g): p for g in s['games'] if os.path.isdir(g) for p in [_pending(g)] if p}
+    if pending and not force:
+        sys.exit(f'not cleaning: deliverables not exported yet: {pending} (use --force)')
+    others = [v for k, v in _read(REGISTRY, {}).get('sessions', {}).items() if v != sd and os.path.isdir(v)]
+    shared = {g for o in others for g in _read(os.path.join(o, 'session.json'), {}).get('games', [])}
+    games = [g for g in s['games'] if g not in shared]
+    freed = _drop(games + [sd, os.path.join(root(), 'tmp')])
+    for empty in (os.path.join(root(), 'games'), os.path.join(root(), 'sessions'), root()):
+        junk = [os.path.join(empty, '.DS_Store')]
+        if os.path.isdir(empty) and not [x for x in os.listdir(empty) if x != '.DS_Store']:
+            for j in junk:
+                if os.path.exists(j):
+                    os.remove(j)
+            os.rmdir(empty)
+    kept = [os.path.basename(g) for g in s['games'] if g in shared]
+    print(f"freed {freed / 1e9:.2f} GB: session {s['id']}, games {[os.path.basename(g) for g in games]}"
+          + (f' (kept, used by another session: {kept})' if kept else ''))
 
 
 # ---------- CLI ----------
@@ -505,8 +566,11 @@ def main(a):
             _use_unit(u)
         print(json.dumps(u))
     elif cmd == 'clean':
-        rest = [x for x in a[1:] if x != '--force']
-        clean(rest[0] if rest else None, '--force' in a)
+        rest = [x for x in a[1:] if x not in ('--force', '--session')]
+        if '--session' in a:
+            clean_session(rest[0] if rest else None, '--force' in a)
+        else:
+            clean(rest[0] if rest else None, '--force' in a)
     else:
         scope, sid = 'game', None
         if cmd.split(':')[0] in FILES:

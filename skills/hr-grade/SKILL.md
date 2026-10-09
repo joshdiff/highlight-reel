@@ -20,7 +20,7 @@ Raw footage differs game to game and shot to shot (sun, cloud, late light, camer
 The correction is in stops (scene-linear), so the ffmpeg path (hr-finish) uses the same solver and lands on the same look.
 
 ## Steps (per aspect timeline)
-1. **Grade before the dissolves**, or remember that `item_index` counts transitions (clips at 0, 1, 3, 5, …). Fresh items have one node; that node carries the correction. A videographer-supplied creative grade (brand `grade.drx`) is NOT the default; if a client wants one, apply it after the look is solved and re-measure.
+1. **Grade before the dissolves**, or remember that `item_index` counts transitions (clips at 0, 1, 3, 5, …). With a teaser, items 0 and 1 are the teaser and its freeze (a compound clip of the same source) — give both the teaser's correction. Fresh items have one node; that node carries the correction. A videographer-supplied creative grade (brand `grade.drx`) is NOT the default; if a client wants one, apply it after the look is solved and re-measure.
 2. **Pass 0 — measure:** `timeline_frame capture` (quality "frame", max_width 270) two frames per clip, at ⅓ and ⅔ of each item, in clip order. Then
    `python3 $S/look.py batch <deliverable>/look.json --clips teaser,R7__1603,… --sport <sport> <frames in capture order>`
    — prints each clip's measured surface luma → target and its next correction; `look.json` keeps corrections and history.

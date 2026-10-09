@@ -1,5 +1,5 @@
 """ffmpeg finishing path — no NLE needed. For the current deliverable, per aspect:
-  1. each play (teaser, then select.sequence): the vcam render for that aspect, or the original trimmed
+  1. each play (teaser, then select.sequence): the vcam render for that aspect (direct.shots.*.out, scratch), or the original trimmed
      to its window when the aspect matches the source (16:9 from 16:9)
   2. colour per source encoding: camera profile `lut` (official) or the built-in luts.py transform,
      then the CDL (deliv grade.cdl.<encoding> → brand grade.cdl → default), then the brand creative LUT
@@ -100,7 +100,8 @@ def solve_look(p, cdl, work, passes=5):
 
 # ---------- pieces ----------
 def plays(deliv, aspect):
-    sel = deliv['select']; renders = (deliv.get('direct') or {}).get('renders', {})
+    sel = deliv['select']; dr = deliv.get('direct') or {}
+    renders = {k: v for k, v in (dr.get('shots') or dr.get('renders') or {}).items() if v.get('out')}
     items = ([dict(sel['teaser'], role='teaser')] if sel.get('teaser') else []) + \
             [dict(s, role=s.get('role', 'play')) for s in sel['sequence']]
     out = []

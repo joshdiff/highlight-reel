@@ -11,7 +11,7 @@
 Usage: python3 gradecheck.py IMG...                  frames already captured
        python3 gradecheck.py --video FILE [--n 8]    sample N frames evenly from a rendered file
        add --json for machine-readable output; exit code 1 if any frame is out of range."""
-import json, os, subprocess, sys, tempfile
+import json, os, shutil, subprocess, sys
 import numpy as np
 from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -47,7 +47,7 @@ def stats(img, path=None):
 def sample_video(path, n=8):
     dur = float(subprocess.run([hrstate.tool('ffprobe'), '-v', 'error', '-show_entries', 'format=duration',
                                 '-of', 'csv=p=0', path], capture_output=True, text=True).stdout.strip())
-    d = tempfile.mkdtemp(); out = []
+    d = hrstate.tmp('gradecheck'); out = []
     for i in range(n):
         t = dur * (i + 0.5) / n; f = os.path.join(d, f'g_{i:02d}.png')
         subprocess.run([hrstate.tool('ffmpeg'), '-nostdin', '-v', 'error', '-y', '-ss', f'{t:.3f}', '-i', path,
@@ -64,6 +64,8 @@ def main(a):
     else:
         frames = [(os.path.basename(p), p) for p in a]
     res = {name: stats(Image.open(p), p) for name, p in frames}
+    if a and a[0] == '--video':
+        shutil.rmtree(os.path.dirname(frames[0][1]), ignore_errors=True)
     if as_json:
         print(json.dumps(res, indent=2))
     else:

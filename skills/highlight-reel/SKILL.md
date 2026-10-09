@@ -31,8 +31,10 @@ Session (a day's footage)  →  Games (one survey each, shared)  →  Targets (a
 
 Data lives in three layers, all local and never in the repo:
 - **Machine:** `/hr-config`.
-- **Library:** `/hr-library` covers clients, brands, players, teams and cameras. Players learn from every game.
-- **Work:** under `<output>/_hr/`.
+- **Library:** `/hr-library` covers clients, brands, players, teams and cameras. Players learn from every game. This is what carries over to later projects.
+- **Work:** under `<output>/_hr/` — scratch for this session only (survey frames, sheets, shot lists, check sheets, timeline files, ffmpeg-path intermediates). Deleted at the end of the session.
+
+**Footage is never copied.** The source files stay where they are; the Resolve path trims them in the timeline and frames them with Inspector keyframes, and the delivered reels plus the Resolve project (which points at the originals) are the only lasting outputs besides the library.
 
 Sport rules live in `$S/../../../sports/<sport>/pack.md`; the shared quality bar is in `$S/../reference/quality-bar.md`.
 
@@ -59,7 +61,7 @@ Sport rules live in `$S/../../../sports/<sport>/pack.md`; the shared quality bar
    - all flags (unconfirmed candidates, encoding mismatches, judder, offline media);
    - which player profiles learned what (new refs, cue reliability changes, look flags).
 
-   Offer `hrstate.py clean <game>` for games whose deliverables are all exported.
+7. **Clean up** (no question — this is the end of the session): `python3 $S/hrstate.py clean --session`. It deletes the session's games' work dirs, the session and `_hr/tmp`, and refuses if any deliverable isn't exported (then the work stays so `/highlight-reel resume` can finish it — say so in the report). Report the space freed. Don't delete the source footage, the delivered files, the Resolve project or anything in `~/.hr_work/library`.
 
 If a unit fails in a way you can't fix, flag it, leave it not-done, continue with units that don't depend on it, and give the user the exact command to resume (`/highlight-reel resume`).
 

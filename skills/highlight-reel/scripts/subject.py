@@ -14,7 +14,7 @@ keeps the subject near the centre, so it still shows who they were following; bo
 --crop F sets the crop height as a fraction of the frame (default 0.45; smaller zooms in for distant play).
 
 Usage: subject.py [--team home|away|TEAM_ID] [--fps 1] [--jobs 4] [--center [--crop 0.45]] [CLIP...]   (default: every clip)"""
-import os, sys, json, math, glob, subprocess, tempfile, io
+import os, sys, json, math, glob, subprocess, shutil, io
 from concurrent.futures import ProcessPoolExecutor
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cv2, hrstate
@@ -33,7 +33,7 @@ def sample(args):
     """One clip → [(t, jpeg bytes | None, box_src | None)]."""
     c, m, rng, fps, center = args
     frac = center if isinstance(center, float) else 0.45
-    d = tempfile.mkdtemp(); out = []
+    d = hrstate.tmp('subject'); out = []
     subprocess.run([hrstate.tool('ffmpeg'), '-nostdin', '-v', 'error', '-ss', str(m['in']), '-i', m['path'],
                     '-t', str(m['out'] - m['in']), '-vf', f'fps={fps},scale=1920:-2', '-strict', 'unofficial',
                     '-q:v', '3', f'{d}/f_%04d.jpg'], check=True)
@@ -56,6 +56,7 @@ def sample(args):
         crop = cv2.convertScaleAbs(big[y0:y1, x0:x1], alpha=1.5, beta=-40)   # lift flat Log footage
         k = m.get('width', W) / W
         out.append((t, cv2.imencode('.jpg', crop)[1].tobytes(), [int(v * k) for v in (x0, y0, x1, y1)]))
+    shutil.rmtree(d, ignore_errors=True)
     return c, out
 
 

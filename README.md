@@ -54,7 +54,9 @@ When you plan a new game, existing players are offered most recent first, or you
 |---|---|---|
 | Machine | `~/.hr_work/config.json` | output folder, media root, default grade, ffmpeg |
 | Library | `~/.hr_work/library/` | clients, brands (+ logo, fonts, music, bumpers), players (+ reference photos), teams, cameras |
-| Work | `<output>/_hr/` | sessions, games (shared survey), targets, deliverables |
+| Work | `<output>/_hr/` | scratch for the current session: survey frames, shot lists, checks — deleted when the session ends |
+
+Your footage is never copied. The Resolve path puts the original files in the timeline, trims them there and frames each play with Inspector Position/Zoom keyframes, the way you would by hand. The ffmpeg path renders its intermediates into the work area and deletes them with it. After a session, all that remains is the delivered reels, the Resolve project (pointing at your originals) and the library.
 
 Nothing personal is in this repo. `examples/` has fictional samples of each profile type. Set `HR_HOME` to keep the library elsewhere.
 

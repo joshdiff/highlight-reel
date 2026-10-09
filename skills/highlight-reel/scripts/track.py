@@ -11,7 +11,7 @@ keys it replaces, so punch-ins survive. Start x = the first rough key's x, or --
 has a decoy nearer the centre.
 
 Usage: track.py SHOTLIST.json [--x0 X] [--fps 8] [--team home|away|TEAM_ID]"""
-import os, sys, json, glob, subprocess, tempfile
+import os, sys, json, glob, subprocess, shutil
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import cv2, hrstate
 from detect import team_blobs
@@ -32,7 +32,7 @@ def zoom_at(t):
     return (before[-1] if before else keys[0]).get('zoom', 1.0)
 
 
-d = tempfile.mkdtemp()
+d = hrstate.tmp('track')
 subprocess.run([hrstate.tool('ffmpeg'), '-nostdin', '-v', 'error', '-ss', str(s['in']), '-i', m['path'],
                 '-t', str(end - s['in']), '-vf', f'fps={fps},scale=1280:-2', '-strict', 'unofficial',
                 f'{d}/f_%04d.jpg'], check=True)
@@ -48,6 +48,7 @@ for i, f in enumerate(sorted(glob.glob(d + '/f_*.jpg'))):
     dense.append({'t': t, 'x': round(px, 1), 'y': round(min(65, max(35, py)), 1), 'zoom': zoom_at(t),
                   'subject': 'player'})
 s['keys'] = dense + [k for k in keys if k['t'] >= end]
+shutil.rmtree(d, ignore_errors=True)
 json.dump(s, open(path, 'w'), indent=1)
 print(f"{s['src']}: {len(dense)} tracked keys to {end}s ({held} samples held), "
       f"{len(s['keys']) - len(dense)} kept; x path {[k['x'] for k in dense][::4]}")

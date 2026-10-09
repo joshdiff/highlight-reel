@@ -39,5 +39,6 @@ Every clip converged (or within ±0.015) and the rendered reel's per-play surfac
 ## Known gaps
 - Exposure is anchored on the playing surface; a reel of close-ups with almost no surface in view falls back to frame median luma, which is less stable.
 - Contrast is left to Resolve's output transform; there is no per-clip contrast match yet.
+- **Backlit skies clip** (1–22% of a frame on a sunny backlit game) although the Log source has headroom (sky ≈0.70 code value): the colour-managed output transform hard-clips above display white. Setting `colorSpaceOutputToneMapping` or `outputDRT` through the API is accepted and read back, but the render is bit-identical — set the output tone mapping in Project Settings → Color Management by hand, or add a highlight roll-off node. Flag it; don't darken the whole clip to save the sky.
 - Captures are ~1.5s each in Resolve and wedge every ~16; a capture-free route (solve on the reframes with luts.py, then translate) would be faster but the two transforms differ, so it isn't used.
 - Measured on one overcast game (FSA): surface luma per play went from a 0.155 spread (one fixed grade) to 0.016.

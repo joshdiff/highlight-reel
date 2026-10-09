@@ -31,6 +31,8 @@ $ARGUMENTS
 3. **Decoys:** everything in the profile's decoys, plus always the same number on the other team and similar numbers (#17/#7, #3/#23/#33). Reject them, and record any NEW decoy in the target's `decoys_met`.
 4. The 5-sample pass misses clips. For every CANDIDATE, every clip where the subject strips show them on the ball, and every clip where a target-team player is close to camera with the ball, run `python3 $S/vgrid.py <clip> <in> <out> <clip>_2fps.jpg 2` over the segment and look for the number. Promote to CONFIRMED only when it's seen in the same continuous action.
 
+**When the kit can't be found by colour** (dark/navy/black kits in backlit Log footage sit at the same hue/saturation as trees — measured S≈10, V≈50–70): skip `crops.py`; run `python3 $S/subject.py --center --crop 0.4` (centre-of-frame crops — the operator keeps the subject near the centre) and identify by number and look. Look cues are seasonal: sleeves/undersleeves change with the weather; weight hair and number higher and record what changed.
+
 ## 1-team. (team) Find the moments instead of a player
 Skip number ID. From the overview sheets (`python3 $S/sheets.py`) and the `src2fps/` thumbnails, flag the pack's events using its "signals" list. Confirm it's the TARGET team's moment by shirt colour. Never include points or goals conceded, unless the target's save/block/dig is the highlight.
 
